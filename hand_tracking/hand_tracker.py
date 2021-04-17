@@ -172,6 +172,7 @@ class HandTracker:
                     print(f"hand orientation: {hand.orientation}")
                     print(f"thumb orientation: {hand.thumb_orientation}")
                     print(f"open set: {hand.get_raised_fingers()}")
+                    print("_________________________________________________")
 
                 # clear detected hands for a new scan, keep this as
                 # the last statement in each iteration.
@@ -182,7 +183,3 @@ class HandTracker:
             cv2.imshow("MediaPipe Hands", image)
             if cv2.waitKey(5) & 0xFF == 27:
                 break
-
-
-tracker = HandTracker()
-tracker.track_hands()
