@@ -183,3 +183,7 @@ class HandTracker:
             cv2.imshow("MediaPipe Hands", image)
             if cv2.waitKey(5) & 0xFF == 27:
                 break
+
+
+# TODO: modify distance to be calculated based on less landmarks.
+# TODO: create a custom axis for hand rotation.
