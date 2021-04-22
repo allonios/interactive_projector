@@ -55,7 +55,7 @@ class Hand:
 
     def __identify_thumb_orientation(self):
         wrist = self.landmarks.landmark[0]
-        thumb = self.landmarks.landmark[4]
+        thumb = self.landmarks.landmark[2]
         if self.orientation == Orientation.UP or self.orientation == Orientation.DOWN:
             if thumb.x < wrist.x:
                 self.thumb_orientation = Orientation.LEFT
