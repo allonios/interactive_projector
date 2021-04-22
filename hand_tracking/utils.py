@@ -1,5 +1,6 @@
+from copy import deepcopy
 from enum import Enum
-from math import sqrt
+from math import cos, sin, sqrt
 
 import mediapipe as mp
 
@@ -41,6 +42,37 @@ def calculate_average_distance(landmarks, image_shape: tuple) -> float:
     return sum / 21
 
 
+def calculate_multiple_distances_to_point(
+    from_point, to_points, landmarks, image_shape
+) -> float:
+    sum = 0
+    for to_point in to_points:
+        if from_point != to_point:
+            sum += calculate_distance(from_point, to_point, image_shape, landmarks)
+    return sum
+
+
+def calculate_custom_average_distance(
+    landmarks_indexes: list, landmarks, image_shape: tuple
+):
+    sum = 0
+    for landmark_index in landmarks_indexes:
+        sum += calculate_multiple_distances_to_point(
+            landmark_index, landmarks_indexes, landmarks, image_shape
+        )
+    return sum / len(landmarks_indexes) * (len(landmarks_indexes) - 1)
+
+
+def get_rotate_landmarks(landmarks, degree):
+    rotated_landmarks = deepcopy(landmarks)
+    for landmark in rotated_landmarks:
+        rotated_x = landmark.x * cos(degree) + landmark.y * sin(degree)
+        rotated_y = landmark.y * cos(degree) - landmark.x * sin(degree)
+        landmark.x = rotated_x
+        landmark.y = rotated_y
+    return rotated_landmarks
+
+
 def is_above(point1_landmark, point2_landmark) -> bool:
     return point1_landmark.y > point2_landmark.y
 
@@ -58,23 +90,19 @@ def is_left(point1_landmark, point2_landmark) -> bool:
 
 
 class FingerLandmarksPairsFactory:
-    @staticmethod
-    def get_fingers_landmarks_pairs(hand) -> dict:
-        if hand.orientation == Orientation.UP:
-            fingers_comparator = is_above
-        elif hand.orientation == Orientation.DOWN:
-            fingers_comparator = is_down
-        elif hand.orientation == Orientation.LEFT:
-            fingers_comparator = is_right
-        # hand.orientation == Orientation.RIGHT
+    @classmethod
+    def __get_thumb_orientation_after_rotation(cls, wrist, thumb):
+        if wrist.x > thumb.x:
+            return Orientation.LEFT
         else:
-            fingers_comparator = is_left
+            return Orientation.RIGHT
 
-        if hand.thumb_orientation == Orientation.UP:
-            thumb_comparator = is_above
-        elif hand.thumb_orientation == Orientation.DOWN:
-            thumb_comparator = is_down
-        elif hand.thumb_orientation == Orientation.LEFT:
+    @classmethod
+    def get_fingers_landmarks_pairs(cls, hand) -> dict:
+        orientation = cls.__get_thumb_orientation_after_rotation(
+            hand.rotated_landmarks[0], hand.rotated_landmarks[4]
+        )
+        if orientation == Orientation.LEFT:
             thumb_comparator = is_right
         # hand.thumb_orientation == Orientation.RIGHT
         else:
@@ -82,10 +110,22 @@ class FingerLandmarksPairsFactory:
 
         fingers_landmarks_pairs = {
             4: {"threshold": 3, "comparator": thumb_comparator},
-            8: {"threshold": 6, "comparator": fingers_comparator},
-            12: {"threshold": 10, "comparator": fingers_comparator},
-            16: {"threshold": 14, "comparator": fingers_comparator},
-            20: {"threshold": 18, "comparator": fingers_comparator},
+            8: {
+                "threshold": 6,
+                "comparator": lambda point1, point2: point1.y > point2.y,
+            },
+            12: {
+                "threshold": 10,
+                "comparator": lambda point1, point2: point1.y > point2.y,
+            },
+            16: {
+                "threshold": 14,
+                "comparator": lambda point1, point2: point1.y > point2.y,
+            },
+            20: {
+                "threshold": 18,
+                "comparator": lambda point1, point2: point1.y > point2.y,
+            },
         }
 
         return fingers_landmarks_pairs
@@ -95,10 +135,10 @@ class FingerLandmarksPairsFactory:
 
 fingers_landmarks_pairs = {
     4: {"threshold": 2, "comparator": is_right},
-    8: {"threshold": 6, "comparator": is_above},
-    12: {"threshold": 10, "comparator": is_above},
-    16: {"threshold": 14, "comparator": is_above},
-    20: {"threshold": 18, "comparator": is_above},
+    8: {"threshold": 6, "comparator": lambda point1, point2: point1.y > point2.y},
+    12: {"threshold": 10, "comparator": lambda point1, point2: point1.y > point2.y},
+    16: {"threshold": 14, "comparator": lambda point1, point2: point1.y > point2.y},
+    20: {"threshold": 18, "comparator": lambda point1, point2: point1.y > point2.y},
 }
 
 

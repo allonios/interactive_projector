@@ -1,4 +1,4 @@
-from math import atan2, degrees
+from math import atan2, degrees, radians
 from time import time
 
 import cv2
@@ -8,6 +8,7 @@ from utils import (
     Orientation,
     calculate_average_distance,
     fingers_indexes,
+    get_rotate_landmarks,
 )
 
 mp_drawing = mp.solutions.drawing_utils
@@ -25,24 +26,7 @@ class Hand:
         self.__identify_thumb_orientation()
 
     def __identify_hand_orientation(self):
-        middle_finger_tip = self.landmarks.landmark[9]
-        hand_center = self.landmarks.landmark[0]
-
-        image_height, image_width, _ = self.image.shape
-
-        # Finger coordinates to the image top left corner (default).
-        finger_x = middle_finger_tip.x * image_width
-        finger_y = middle_finger_tip.y * image_height
-
-        # New coordinates center.
-        center_x = hand_center.x * image_width
-        center_y = hand_center.y * image_height
-
-        # Finger coordinates to the image center.
-        finger_x = center_x - finger_x
-        finger_y = center_y - finger_y
-
-        degree = degrees(atan2(finger_y, finger_x))
+        degree = self.get_hand_rotation_degrees()
 
         if -135 < degree < -45:
             self.orientation = Orientation.DOWN
@@ -75,7 +59,33 @@ class Hand:
         mp_drawing.draw_landmarks(self.image, self.landmarks, mp_hands.HAND_CONNECTIONS)
 
     def get_depth(self):
+        # landmarks_indexes = [0, 5, 9, 13, 17]
+        # return calculate_custom_average_distance(
+        #     landmarks_indexes,
+        #     self.landmarks.landmark,
+        #     self.image.shape
+        # )
         return calculate_average_distance(self.landmarks.landmark, self.image.shape)
+
+    def get_hand_rotation_degrees(self):
+        middle_finger_tip = self.landmarks.landmark[9]
+        hand_center = self.landmarks.landmark[0]
+
+        image_height, image_width, _ = self.image.shape
+
+        # Finger coordinates to the image top left corner (default).
+        finger_x = middle_finger_tip.x * image_width
+        finger_y = middle_finger_tip.y * image_height
+
+        # New coordinates center.
+        center_x = hand_center.x * image_width
+        center_y = hand_center.y * image_height
+
+        # Finger coordinates to the image center.
+        finger_x = center_x - finger_x
+        finger_y = center_y - finger_y
+
+        return degrees(atan2(finger_y, finger_x))
 
     def is_closed_finger(self, index: int):
         fingers_landmarks_pairs = (
@@ -85,11 +95,16 @@ class Hand:
         point2_index = fingers_landmarks_pairs[index]["threshold"]
         comparator = fingers_landmarks_pairs[index]["comparator"]
         return comparator(
-            self.landmarks.landmark[point1_index], self.landmarks.landmark[point2_index]
+            self.rotated_landmarks[point1_index], self.rotated_landmarks[point2_index]
         )
 
     def get_raised_fingers(self):
         raised = []
+        rotation = self.get_hand_rotation_degrees()
+        rotated_landmarks = get_rotate_landmarks(
+            self.landmarks.landmark, radians(rotation - 90)
+        )
+        self.rotated_landmarks = rotated_landmarks
         for finger_id, finger_landmark in fingers_indexes.items():
             if not self.is_closed_finger(finger_landmark):
                 raised.append(finger_id)
@@ -173,6 +188,7 @@ class HandTracker:
                     print(f"thumb orientation: {hand.thumb_orientation}")
                     print(f"open set: {hand.get_raised_fingers()}")
                     print("_________________________________________________")
+                    hand.raised_fingers_test()
 
                 # clear detected hands for a new scan, keep this as
                 # the last statement in each iteration.
