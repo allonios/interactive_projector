@@ -4,10 +4,10 @@ from time import time
 import cv2
 import mediapipe as mp
 from utils import (
+    FINGERS_INDEXES,
     FingerLandmarksPairsFactory,
     Orientation,
     calculate_average_distance,
-    fingers_indexes,
     get_rotate_landmarks,
 )
 
@@ -87,13 +87,13 @@ class Hand:
 
         return degrees(atan2(finger_y, finger_x))
 
-    def is_closed_finger(self, index: int):
+    def is_closed_finger(self, landmark_index: int):
         fingers_landmarks_pairs = (
             FingerLandmarksPairsFactory.get_fingers_landmarks_pairs(self)
         )
-        point1_index = index
-        point2_index = fingers_landmarks_pairs[index]["threshold"]
-        comparator = fingers_landmarks_pairs[index]["comparator"]
+        point1_index = landmark_index
+        point2_index = fingers_landmarks_pairs[landmark_index]["threshold"]
+        comparator = fingers_landmarks_pairs[landmark_index]["comparator"]
         return comparator(
             self.rotated_landmarks[point1_index], self.rotated_landmarks[point2_index]
         )
@@ -105,7 +105,7 @@ class Hand:
             self.landmarks.landmark, radians(rotation - 90)
         )
         self.rotated_landmarks = rotated_landmarks
-        for finger_id, finger_landmark in fingers_indexes.items():
+        for finger_id, finger_landmark in FINGERS_INDEXES.items():
             if not self.is_closed_finger(finger_landmark):
                 raised.append(finger_id)
 
@@ -188,7 +188,6 @@ class HandTracker:
                     print(f"thumb orientation: {hand.thumb_orientation}")
                     print(f"open set: {hand.get_raised_fingers()}")
                     print("_________________________________________________")
-                    hand.raised_fingers_test()
 
                 # clear detected hands for a new scan, keep this as
                 # the last statement in each iteration.
@@ -202,4 +201,3 @@ class HandTracker:
 
 
 # TODO: modify distance to be calculated based on less landmarks.
-# TODO: create a custom axis for hand rotation.

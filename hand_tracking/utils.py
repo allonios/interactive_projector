@@ -18,7 +18,7 @@ class Orientation(Enum):
         return self.value
 
 
-fingers_indexes = {1: 4, 2: 8, 3: 12, 4: 16, 5: 20}
+FINGERS_INDEXES = {1: 4, 2: 8, 3: 12, 4: 16, 5: 20}
 
 
 def calculate_distance(point1: int, point2: int, image_shape, landmarks) -> float:
@@ -100,7 +100,7 @@ class FingerLandmarksPairsFactory:
     @classmethod
     def get_fingers_landmarks_pairs(cls, hand) -> dict:
         orientation = cls.__get_thumb_orientation_after_rotation(
-            hand.rotated_landmarks[0], hand.rotated_landmarks[4]
+            hand.rotated_landmarks[0], hand.rotated_landmarks[1]
         )
         if orientation == Orientation.LEFT:
             thumb_comparator = is_right
@@ -111,19 +111,19 @@ class FingerLandmarksPairsFactory:
         fingers_landmarks_pairs = {
             4: {"threshold": 3, "comparator": thumb_comparator},
             8: {
-                "threshold": 6,
+                "threshold": 5,
                 "comparator": lambda point1, point2: point1.y > point2.y,
             },
             12: {
-                "threshold": 10,
+                "threshold": 9,
                 "comparator": lambda point1, point2: point1.y > point2.y,
             },
             16: {
-                "threshold": 14,
+                "threshold": 13,
                 "comparator": lambda point1, point2: point1.y > point2.y,
             },
             20: {
-                "threshold": 18,
+                "threshold": 17,
                 "comparator": lambda point1, point2: point1.y > point2.y,
             },
         }
@@ -132,6 +132,7 @@ class FingerLandmarksPairsFactory:
 
 
 ##########################################################################
+# old stuff for testing needs to be removed just don't know when.
 
 fingers_landmarks_pairs = {
     4: {"threshold": 2, "comparator": is_right},
@@ -151,7 +152,7 @@ def is_closed(index: int, landmarks):
 
 def check_raised_fingers(landmarks):
     raised = []
-    for finger_id, finger_landmark in fingers_indexes.items():
+    for finger_id, finger_landmark in FINGERS_INDEXES.items():
         if not is_closed(finger_landmark, landmarks):
             raised.append(finger_id)
 
