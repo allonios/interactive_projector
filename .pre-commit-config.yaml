@@ -12,11 +12,11 @@ repos:
     hooks:
       - id: black
         exclude: /migrations/*
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v2.2.1"
-    hooks:
-      - id: prettier
-        exclude: .*\.min\.js|.*\.html|/dist/*
+#  - repo: https://github.com/pre-commit/mirrors-prettier
+#    rev: "v2.2.1"
+#    hooks:
+#      - id: prettier
+#        exclude: .*\.min\.js|.*\.html|/dist/*
   #  - repo: https://github.com/pre-commit/mirrors-eslint
   #    rev: v7.17.0
   #    hooks:
@@ -44,7 +44,7 @@ repos:
         # exclude files where underlines are not distinguishable from merge conflicts
         exclude: /README\.rst$|^docs/.*\.rst$
       - id: check-symlinks
-      - id: check-xml
+#      - id: check-xml
       - id: mixed-line-ending
         args: ["--fix=lf"]
   - repo: https://gitlab.com/pycqa/flake8
