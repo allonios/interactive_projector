@@ -65,6 +65,19 @@ class Hand:
         #     self.landmarks.landmark,
         #     self.image.shape
         # )
+        # pieces = [
+        #     (HandLandmark.WRIST, HandLandmark.THUMB_CMC),
+        #     (HandLandmark.WRIST, HandLandmark.INDEX_FINGER_MCP),
+        #     (HandLandmark.WRIST, HandLandmark.PINKY_MCP),
+        #     (HandLandmark.INDEX_FINGER_MCP, HandLandmark.MIDDLE_FINGER_MCP),
+        #     (HandLandmark.MIDDLE_FINGER_MCP, HandLandmark.RING_FINGER_MCP),
+        #     (HandLandmark.RING_FINGER_MCP, HandLandmark.PINKY_MCP),
+        # ]
+        # return calculate_custom_average_distance(
+        #     self.landmarks.landmark,
+        #     self.image.shape,
+        #     pieces
+        # )
         return calculate_average_distance(self.landmarks.landmark, self.image.shape)
 
     def get_hand_rotation_degrees(self):
@@ -198,6 +211,3 @@ class HandTracker:
             cv2.imshow("MediaPipe Hands", image)
             if cv2.waitKey(5) & 0xFF == 27:
                 break
-
-
-# TODO: modify distance to be calculated based on less landmarks.

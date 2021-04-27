@@ -42,6 +42,17 @@ def calculate_average_distance(landmarks, image_shape: tuple) -> float:
     return sum / 21
 
 
+def calculate_custom_average_distance(
+    landmarks, image_shape: tuple, pieces: list
+) -> float:
+    sum = 0
+    for connection_coords in mp_hands.HAND_CONNECTIONS:
+        sum += calculate_distance(
+            connection_coords[0], connection_coords[1], image_shape, landmarks
+        )
+    return sum / 21
+
+
 def calculate_multiple_distances_to_point(
     from_point, to_points, landmarks, image_shape
 ) -> float:
@@ -52,7 +63,7 @@ def calculate_multiple_distances_to_point(
     return sum
 
 
-def calculate_custom_average_distance(
+def calculate_collection_average_distance(
     landmarks_indexes: list, landmarks, image_shape: tuple
 ):
     sum = 0
