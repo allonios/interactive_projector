@@ -3,6 +3,7 @@ from time import time
 
 import cv2
 import mediapipe as mp
+
 from utils import calculate_average_distance, check_raised_fingers
 
 mp_drawing = mp.solutions.drawing_utils

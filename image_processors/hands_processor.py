@@ -1,8 +1,11 @@
 from math import atan2, degrees, radians
-from time import time
+from typing import List, Tuple
 
 import cv2
 import mediapipe as mp
+from numpy import ndarray
+
+from image_processors.base import BaseImageProcessor
 from utils import (
     FINGERS_INDEXES,
     FingerLandmarksPairsFactory,
@@ -59,25 +62,6 @@ class Hand:
         mp_drawing.draw_landmarks(self.image, self.landmarks, mp_hands.HAND_CONNECTIONS)
 
     def get_depth(self):
-        # landmarks_indexes = [0, 5, 9, 13, 17]
-        # return calculate_custom_average_distance(
-        #     landmarks_indexes,
-        #     self.landmarks.landmark,
-        #     self.image.shape
-        # )
-        # pieces = [
-        #     (HandLandmark.WRIST, HandLandmark.THUMB_CMC),
-        #     (HandLandmark.WRIST, HandLandmark.INDEX_FINGER_MCP),
-        #     (HandLandmark.WRIST, HandLandmark.PINKY_MCP),
-        #     (HandLandmark.INDEX_FINGER_MCP, HandLandmark.MIDDLE_FINGER_MCP),
-        #     (HandLandmark.MIDDLE_FINGER_MCP, HandLandmark.RING_FINGER_MCP),
-        #     (HandLandmark.RING_FINGER_MCP, HandLandmark.PINKY_MCP),
-        # ]
-        # return calculate_custom_average_distance(
-        #     self.landmarks.landmark,
-        #     self.image.shape,
-        #     pieces
-        # )
         return calculate_average_distance(self.landmarks.landmark, self.image.shape)
 
     def get_hand_rotation_degrees(self):
@@ -125,21 +109,14 @@ class Hand:
         return raised
 
 
-class HandTracker:
+class HandsProcessor(BaseImageProcessor):
     def __init__(
-        self,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5,
-        max_num_hands=2,
+        self, min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=2
     ):
+        super().__init__()
         self.min_detection_confidence = min_detection_confidence
         self.min_tracking_confidence = min_tracking_confidence
         self.max_num_hands = max_num_hands
-
-        self.prev_frame_time = 0
-        self.new_frame_time = 0
-
-        self.cap = cv2.VideoCapture(0)
 
         self.hands = mp_hands.Hands(
             max_num_hands=self.max_num_hands,
@@ -147,67 +124,28 @@ class HandTracker:
             min_tracking_confidence=self.min_tracking_confidence,
         )
 
-        self.detected_hands = []
+    def __call__(self, image: ndarray):
+        self.image = image
+        return self.process_image()
 
-    def display_fps(self, image):
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        self.new_frame_time = time()
-        fps = 1 / (self.new_frame_time - self.prev_frame_time)
-        self.prev_frame_time = self.new_frame_time
+    def process_image(self) -> Tuple[ndarray, List[Hand]]:
+        # To improve performance, optionally mark the image as not writeable to
+        # pass by reference.
+        self.image.flags.writeable = False
 
-        cv2.putText(
-            image,
-            "FPS: {:.2f}".format(fps),
-            (7, 70),
-            font,
-            3,
-            (100, 255, 0),
-            3,
-            cv2.LINE_AA,
-        )
+        results = self.hands.process(self.image)
 
-    def track_hands(self):
-        while self.cap.isOpened():
-            success, image = self.cap.read()
-            if not success:
-                print("Ignoring empty camera frame.")
-                # If loading a video, use 'break' instead of 'continue'.
-                continue
+        # Draw the hand annotations on the image.
+        self.image.flags.writeable = True
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
 
-            # Flip the image horizontally for a later selfie-view display, and convert
-            # the BGR image to RGB.
-            image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
+        detected_hands = []
+        if results.multi_hand_landmarks:
+            for hand_landmarks, hand_type in zip(
+                results.multi_hand_landmarks, results.multi_handedness
+            ):
+                hand = Hand(hand_landmarks, hand_type, self.image)
+                hand.draw_landmarks()
+                detected_hands.append(hand)
 
-            # To improve performance, optionally mark the image as not writeable to
-            # pass by reference.
-            image.flags.writeable = False
-
-            results = self.hands.process(image)
-
-            # Draw the hand annotations on the image.
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            if results.multi_hand_landmarks:
-                for hand_landmarks, hand_type in zip(
-                    results.multi_hand_landmarks, results.multi_handedness
-                ):
-                    hand = Hand(hand_landmarks, hand_type, image)
-                    hand.draw_landmarks()
-                    self.detected_hands.append(hand)
-
-                for hand_index, hand in enumerate(self.detected_hands):
-                    print(f"hand id: {hand_index}, distance: {hand.get_depth()}")
-                    print(f"hand orientation: {hand.orientation}")
-                    print(f"thumb orientation: {hand.thumb_orientation}")
-                    print(f"open set: {hand.get_raised_fingers()}")
-                    print("_________________________________________________")
-
-                # clear detected hands for a new scan, keep this as
-                # the last statement in each iteration.
-                self.detected_hands.clear()
-
-            self.display_fps(image)
-
-            cv2.imshow("MediaPipe Hands", image)
-            if cv2.waitKey(5) & 0xFF == 27:
-                break
+        return self.image, detected_hands
