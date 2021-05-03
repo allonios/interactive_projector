@@ -54,7 +54,7 @@ class ImageHandler:
             cv2.LINE_AA,
         )
 
-    def track_hands(self):
+    def handle(self):
         while self.cap.isOpened():
             success, self.current_image = self.cap.read()
             if not success:
@@ -68,7 +68,7 @@ class ImageHandler:
                 cv2.flip(self.current_image, 1), cv2.COLOR_BGR2RGB
             )
 
-            self.curr_image, detected_hands = self.hands_processor(self.current_image)
+            self.current_image, detected_hands = self.hands_processor(self.current_image)
 
             for hand_index, hand in enumerate(detected_hands):
                 print(f"hand id: {hand_index}, distance: {hand.get_depth()}")
