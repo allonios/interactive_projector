@@ -1,8 +1,8 @@
+import mediapipe as mp
+
 from copy import deepcopy
 from enum import Enum
 from math import cos, sin, sqrt
-
-import mediapipe as mp
 
 mp_hands = mp.solutions.hands
 
@@ -42,19 +42,11 @@ def calculate_average_distance(landmarks, image_shape: tuple) -> float:
     return sum / 21
 
 
-def calculate_custom_average_distance(
-    landmarks, image_shape: tuple, pieces: list
-) -> float:
-    sum = 0
-    for connection_coords in mp_hands.HAND_CONNECTIONS:
-        sum += calculate_distance(
-            connection_coords[0], connection_coords[1], image_shape, landmarks
-        )
-    return sum / 21
-
-
 def calculate_multiple_distances_to_point(
-    from_point, to_points, landmarks, image_shape
+        from_point,
+        to_points,
+        landmarks,
+        image_shape
 ) -> float:
     sum = 0
     for to_point in to_points:
@@ -84,22 +76,6 @@ def get_rotate_landmarks(landmarks, degree):
     return rotated_landmarks
 
 
-def is_above(point1_landmark, point2_landmark) -> bool:
-    return point1_landmark.y > point2_landmark.y
-
-
-def is_down(point1_landmark, point2_landmark) -> bool:
-    return point1_landmark.y < point2_landmark.y
-
-
-def is_right(point1_landmark, point2_landmark) -> bool:
-    return point1_landmark.x > point2_landmark.x
-
-
-def is_left(point1_landmark, point2_landmark) -> bool:
-    return point1_landmark.x < point2_landmark.x
-
-
 class FingerLandmarksPairsFactory:
     @classmethod
     def __get_thumb_orientation_after_rotation(cls, wrist, thumb):
@@ -114,13 +90,16 @@ class FingerLandmarksPairsFactory:
             hand.rotated_landmarks[0], hand.rotated_landmarks[1]
         )
         if orientation == Orientation.LEFT:
-            thumb_comparator = is_right
+            thumb_comparator = lambda point1, point2: point1.x > point2.x
         # hand.thumb_orientation == Orientation.RIGHT
         else:
-            thumb_comparator = is_left
+            thumb_comparator = lambda point1, point2: point1.x < point2.x
 
         fingers_landmarks_pairs = {
-            4: {"threshold": 3, "comparator": thumb_comparator},
+            4: {
+                "threshold": 3,
+                "comparator": thumb_comparator
+            },
             8: {
                 "threshold": 5,
                 "comparator": lambda point1, point2: point1.y > point2.y,
@@ -140,31 +119,3 @@ class FingerLandmarksPairsFactory:
         }
 
         return fingers_landmarks_pairs
-
-
-##########################################################################
-# old stuff for testing needs to be removed just don't know when.
-
-fingers_landmarks_pairs = {
-    4: {"threshold": 2, "comparator": is_right},
-    8: {"threshold": 6, "comparator": lambda point1, point2: point1.y > point2.y},
-    12: {"threshold": 10, "comparator": lambda point1, point2: point1.y > point2.y},
-    16: {"threshold": 14, "comparator": lambda point1, point2: point1.y > point2.y},
-    20: {"threshold": 18, "comparator": lambda point1, point2: point1.y > point2.y},
-}
-
-
-def is_closed(index: int, landmarks):
-    point1_index = index
-    point2_index = fingers_landmarks_pairs[index]["threshold"]
-    comparator = fingers_landmarks_pairs[index]["comparator"]
-    return comparator(landmarks[point1_index], landmarks[point2_index])
-
-
-def check_raised_fingers(landmarks):
-    raised = []
-    for finger_id, finger_landmark in FINGERS_INDEXES.items():
-        if not is_closed(finger_landmark, landmarks):
-            raised.append(finger_id)
-
-    return raised

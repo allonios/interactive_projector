@@ -4,7 +4,7 @@ from time import time
 import cv2
 import mediapipe as mp
 
-from utils import calculate_average_distance, check_raised_fingers
+from utils import calculate_average_distance
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -40,7 +40,6 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
                     calculate_average_distance(hand_landmarks.landmark, image.shape),
                 )
 
-                print(check_raised_fingers(hand_landmarks.landmark))
                 for index, landmark in enumerate(hand_landmarks.landmark):
                     h, w, c = image.shape
                     cx, cy = landmark.x * w, landmark.y * h

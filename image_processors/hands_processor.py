@@ -111,7 +111,10 @@ class Hand:
 
 class HandsProcessor(BaseImageProcessor):
     def __init__(
-        self, min_detection_confidence=0.5, min_tracking_confidence=0.5, max_num_hands=2
+            self,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5,
+            max_num_hands=2
     ):
         super().__init__()
         self.min_detection_confidence = min_detection_confidence

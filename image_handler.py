@@ -1,15 +1,14 @@
-from time import time
-
 import cv2
 import mediapipe as mp
 
+from time import time
 from image_processors.hands_processor import HandsProcessor
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-class ImageHandler:
+class ImageHandler():
     def __init__(
         self,
         min_detection_confidence=0.5,
