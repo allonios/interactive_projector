@@ -11,14 +11,14 @@ from utils import (
     FingerLandmarksPairsFactory,
     Orientation,
     calculate_average_distance,
-    get_rotate_landmarks,
+    get_rotate_landmarks, calculate_collection_average_distance,
 )
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-class Hand:
+class Hand():
     def __init__(self, hand_landmarks, hand_type, image):
         self.landmarks = hand_landmarks
         self.hand_type = hand_type
@@ -62,7 +62,12 @@ class Hand:
         mp_drawing.draw_landmarks(self.image, self.landmarks, mp_hands.HAND_CONNECTIONS)
 
     def get_depth(self):
-        return calculate_average_distance(self.landmarks.landmark, self.image.shape)
+        return calculate_collection_average_distance(
+            [0, 1, 2, 5, 9, 13, 17],
+            self.landmarks.landmark,
+            self.image.shape
+        )
+        # return calculate_average_distance(self.landmarks.landmark, self.image.shape)
 
     def get_hand_rotation_degrees(self):
         middle_finger_tip = self.landmarks.landmark[9]
@@ -126,10 +131,6 @@ class HandsProcessor(BaseImageProcessor):
             min_detection_confidence=self.min_detection_confidence,
             min_tracking_confidence=self.min_tracking_confidence,
         )
-
-    def __call__(self, image: ndarray):
-        self.image = image
-        return self.process_image()
 
     def process_image(self) -> Tuple[ndarray, List[Hand]]:
         # To improve performance, optionally mark the image as not writeable to
