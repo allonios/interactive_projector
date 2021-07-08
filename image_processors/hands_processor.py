@@ -10,7 +10,6 @@ from utils.utils import (
     FINGERS_INDEXES,
     FingerLandmarksPairsFactory,
     Orientation,
-    calculate_average_distance,
     get_rotate_landmarks, calculate_collection_average_distance,
 )
 
@@ -18,7 +17,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-class Hand():
+class Hand:
     def __init__(self, hand_landmarks, hand_type, image):
         self.landmarks = hand_landmarks
         self.hand_type = hand_type
@@ -139,11 +138,7 @@ class HandsProcessor(BaseImageProcessor):
         # pass by reference.
         self.image.flags.writeable = False
 
-        print("im process1", self.image.shape)
-
         results = self.hands.process(self.image)
-
-        print("im process2", self.image.shape)
 
         # Draw the hand annotations on the image.
         self.image.flags.writeable = True

@@ -1,11 +1,10 @@
+from time import time
+
 import cv2
 import mediapipe as mp
 
-from time import time
-
 from image_handlers.base import BaseImageHandlerProcess
-from image_processors.hands_processor import HandsProcessor, Hand
-from utils.camera_utils import CameraProcess
+from image_processors.hands_processor import HandsProcessor
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -213,35 +212,51 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
             info = ""
             for hand_index, hand in enumerate(detected_hands):
                 info = info + \
-                       f"window: {self.window_title}" \
+                       f"window: {self.window_title}\n" \
                        f"hand id: {hand_index}, distance: {hand.get_depth()}\n" \
                        f"hand orientation: {hand.orientation}\n" \
                        f"thumb orientation: {hand.thumb_orientation}\n" \
                        f"open set: {hand.get_raised_fingers()}\n" \
                        "____________________________________________________\n"
-            if info:
-                print(info)
+            # if info:
+            #     print(info)
 
             self.display_fps()
 
-            yield self.current_image
+            centers_of_hands = list(
+                map(
+                    lambda hand: (
+                        hand.landmarks.landmark[9].x * self.current_image.shape[1],
+                        hand.landmarks.landmark[9].y * self.current_image.shape[0],
+                    ),
+                    detected_hands
+                )
+            )
+
+            return_data = {
+                "image": self.current_image,
+                "success": success,
+                "centers_of_hands": centers_of_hands
+            }
+
+            yield return_data
 
 # Testing
-handler1 = MediaPipeHandsImageHandler(0, "1", min_detection_confidence=0.7)
-handler2 = MediaPipeHandsImageHandler(2, "2", min_detection_confidence=0.7)
-
-handler1.start()
-handler2.start()
-
-while handler1.process.is_alive() and handler1.process.is_alive():
-    image1 = handler1.next_image()
-    image2 = handler2.next_image()
-
-    cv2.imshow(handler1.window_title, image1)
-    cv2.imshow(handler2.window_title, image2)
-
-    if cv2.waitKey(1) & 0xFF == 27:
-        handler1.stop()
-        handler2.stop()
-        # cv2.destroyAllWindows()
-        exit()
+# handler1 = MediaPipeHandsImageHandler(0, "1", min_detection_confidence=0.7)
+# handler2 = MediaPipeHandsImageHandler(2, "2", min_detection_confidence=0.7)
+#
+# handler1.start()
+# handler2.start()
+#
+# while handler1.process.is_alive() and handler1.process.is_alive():
+#     image1 = handler1.read_next_data()
+#     image2 = handler2.read_next_data()
+#
+#     cv2.imshow(handler1.window_title, image1)
+#     cv2.imshow(handler2.window_title, image2)
+#
+#     if cv2.waitKey(1) & 0xFF == 27:
+#         handler1.stop()
+#         handler2.stop()
+#         # cv2.destroyAllWindows()
+#         exit()
