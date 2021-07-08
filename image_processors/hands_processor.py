@@ -6,7 +6,7 @@ import mediapipe as mp
 from numpy import ndarray
 
 from image_processors.base import BaseImageProcessor
-from utils import (
+from utils.utils import (
     FINGERS_INDEXES,
     FingerLandmarksPairsFactory,
     Orientation,
@@ -133,11 +133,17 @@ class HandsProcessor(BaseImageProcessor):
         )
 
     def process_image(self) -> Tuple[ndarray, List[Hand]]:
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+
         # To improve performance, optionally mark the image as not writeable to
         # pass by reference.
         self.image.flags.writeable = False
 
+        print("im process1", self.image.shape)
+
         results = self.hands.process(self.image)
+
+        print("im process2", self.image.shape)
 
         # Draw the hand annotations on the image.
         self.image.flags.writeable = True
