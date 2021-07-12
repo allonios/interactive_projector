@@ -154,3 +154,6 @@ class HandsProcessor(BaseImageProcessor):
                 detected_hands.append(hand)
 
         return self.image, detected_hands
+
+    def __del__(self):
+        self.hands.close()

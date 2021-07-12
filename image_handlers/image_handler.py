@@ -16,7 +16,8 @@ class ImageHandler():
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
             max_num_hands=2,
-            input_stream=0
+            input_stream=0,
+            window_title="1",
     ):
         self.min_detection_confidence = min_detection_confidence
         self.min_tracking_confidence = min_tracking_confidence
@@ -27,13 +28,11 @@ class ImageHandler():
 
         self.cap = cv2.VideoCapture(input_stream)
 
+        self.window_title = window_title
+
         self.current_image = None
 
-        self.hands_processor = HandsProcessor(
-            self.min_detection_confidence,
-            self.min_tracking_confidence,
-            self.max_num_hands,
-        )
+
 
     def display_fps(self):
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -66,8 +65,17 @@ class ImageHandler():
                 cv2.flip(self.current_image, 1), cv2.COLOR_BGR2RGB
             )
 
+            self.hands_processor = HandsProcessor(
+                self.min_detection_confidence,
+                self.min_tracking_confidence,
+                self.max_num_hands,
+            )
+
             self.current_image, detected_hands = self.hands_processor(
                 self.current_image)
+
+            del self.hands_processor
+
             info = ""
             for hand_index, hand in enumerate(detected_hands):
                 info = info + \
@@ -81,7 +89,7 @@ class ImageHandler():
 
             self.display_fps()
 
-            cv2.imshow("MediaPipe Hands", self.current_image)
+            cv2.imshow(self.window_title, self.current_image)
             key = cv2.waitKey(1)
 
             if key & 0xFF == 27:
@@ -147,9 +155,9 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
         cv2.putText(
             self.current_image,
             "FPS: {:.2f}".format(fps),
-            (7, 70),
+            (0, 70),
             font,
-            3,
+            1,
             (100, 255, 0),
             3,
             cv2.LINE_AA,
@@ -200,13 +208,14 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
             self.current_image = cv2.flip(self.current_image, 1)
 
             # implement your processors here
-            self.hands_processor = HandsProcessor(
+            hands_processor = HandsProcessor(
                 self.min_detection_confidence,
                 self.min_tracking_confidence,
                 self.max_num_hands,
             )
-            self.current_image, detected_hands = self.hands_processor(
+            self.current_image, detected_hands = hands_processor(
                 self.current_image)
+            del hands_processor
 
 
             info = ""

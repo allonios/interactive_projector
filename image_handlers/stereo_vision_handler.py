@@ -54,22 +54,22 @@ class StereoImageHandler:
                     cv2.putText(
                     right_image,
                     f"depth: {str(round(depth, 1))}",
-                    (50, 50),
+                    (0, 30),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.5,
                     (100, 255, 0),
-                    1,
+                    3,
                     cv2.LINE_AA,
                     )
 
                     cv2.putText(
                         left_image,
                         f"depth: {str(round(depth, 1))}",
-                        (50, 50),
+                        (0, 30),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         1.5,
                         (100, 255, 0),
-                        1,
+                        3,
                         cv2.LINE_AA,
                     )
 

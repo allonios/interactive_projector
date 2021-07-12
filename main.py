@@ -1,3 +1,5 @@
+from multiprocessing import Process
+
 from image_handlers.image_handler import ImageHandler, \
     MediaPipeHandsImageHandler
 from image_handlers.stereo_vision_handler import StereoImageHandler
@@ -15,16 +17,16 @@ if __name__ == "__main__":
 
     right_handler = MediaPipeHandsImageHandler(
         2,
-        "2",
-        min_detection_confidence=0.7
+        "right",
+        min_detection_confidence=0.5
     )
 
     left_handler = MediaPipeHandsImageHandler(
-        0,
-        "1",
-        min_detection_confidence=0.7
+        6,
+        "left",
+        min_detection_confidence=0.5
     )
 
-    stereo_vision = StereoImageHandler(right_handler, left_handler, 19)
+    stereo_vision = StereoImageHandler(right_handler, left_handler, 11)
 
     stereo_vision.handle()
