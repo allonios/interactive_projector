@@ -1,32 +1,43 @@
 from multiprocessing import Process
 
-from image_handlers.image_handler import ImageHandler, \
-    MediaPipeHandsImageHandler
+from image_handlers.image_handler import MediaPipeHandsImageHandler
 from image_handlers.stereo_vision_handler import StereoImageHandler
-
-URL = "http://192.168.1.103:8080/video"
-
-# handler = ImageHandler(
-#     min_detection_confidence=0.7,
-#     input_stream=URL
-#     #input_stream=2
-# )
+from image_processors.hands_centers_processor import HandsCentersProcessor
+from image_processors.hands_processor import HandsProcessor
 
 if __name__ == "__main__":
     # handler.handle()
 
+    min_detection_confidence = 0.5
+
+    right_handler_processors = [
+        HandsProcessor(
+            min_detection_confidence=min_detection_confidence,
+            window_title="right",
+        ),
+        HandsCentersProcessor()
+    ]
+
+    left_handler_processors = [
+        HandsProcessor(
+            min_detection_confidence=min_detection_confidence,
+            window_title="left",
+        ),
+        HandsCentersProcessor()
+    ]
+
     right_handler = MediaPipeHandsImageHandler(
         2,
         "right",
-        min_detection_confidence=0.5
+        processors=right_handler_processors,
     )
 
     left_handler = MediaPipeHandsImageHandler(
         6,
         "left",
-        min_detection_confidence=0.5
+        processors=left_handler_processors,
     )
 
-    stereo_vision = StereoImageHandler(right_handler, left_handler, 11)
+    stereo_vision = StereoImageHandler(right_handler, left_handler, baseline=11)
 
     stereo_vision.handle()

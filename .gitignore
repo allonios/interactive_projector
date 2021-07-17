@@ -46,3 +46,4 @@ env/
 assets/
 *.mo
 workspace/
+/stereo_vision/

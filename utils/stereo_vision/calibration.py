@@ -9,10 +9,10 @@ stereoMapL_y = cv_file.getNode('stereoMapL_y').mat()
 stereoMapR_x = cv_file.getNode('stereoMapR_x').mat()
 stereoMapR_y = cv_file.getNode('stereoMapR_y').mat()
 
-print(stereoMapL_x)
-print(stereoMapL_y)
-print(stereoMapR_x)
-print(stereoMapR_y)
+# print(stereoMapL_x)
+# print(stereoMapL_y)
+# print(stereoMapR_x)
+# print(stereoMapR_y)
 
 def undistortRectify(frameR, frameL):
 

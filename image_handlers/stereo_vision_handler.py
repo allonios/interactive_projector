@@ -1,3 +1,5 @@
+from turtle import right
+
 import cv2
 
 from utils.stereo_vision.calibration import undistortRectify
@@ -16,7 +18,7 @@ class StereoImageHandler:
         self.right_handler.start()
         self.left_handler.start()
 
-        while self.left_handler.process.is_alive() and self.right_handler.process.is_alive():
+        while self.right_handler.process.is_alive() and self.left_handler.process.is_alive():
             right_data = self.right_handler.read_next_data()
             left_data = self.left_handler.read_next_data()
 
@@ -26,8 +28,8 @@ class StereoImageHandler:
             right_image_success = right_data["success"]
             left_image_success = left_data["success"]
 
-            right_centers_of_hands = right_data["centers_of_hands"]
-            left_centers_of_hands = left_data["centers_of_hands"]
+            right_centers_of_hands = right_data["data"].get("hands_centers", None)
+            left_centers_of_hands = left_data["data"].get("hands_centers", None)
 
             if not right_image_success or not left_image_success:
                 continue
