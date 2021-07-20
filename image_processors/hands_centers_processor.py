@@ -3,12 +3,14 @@ from image_processors.base import BaseImageProcessor
 
 class HandsCentersProcessor(BaseImageProcessor):
     def process_data(self) -> dict:
-        self.data["hands_centers"] = list(
+        self.data["data"]["hands_centers"] = list(
             map(
-                lambda hand: (
-                    hand.landmarks.landmark[9].x * self.image.shape[1],
-                    hand.landmarks.landmark[9].y * self.image.shape[0],
-                ),
+                lambda hand: {
+                    hand.id: (
+                        hand.landmarks.landmark[9].x * self.image.shape[1],
+                        hand.landmarks.landmark[9].y * self.image.shape[0],
+                    )
+                },
                 self.data["data"]["detected_hands"]
             )
         )

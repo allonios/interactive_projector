@@ -1,13 +1,12 @@
-from turtle import right
-
 import cv2
 
-from utils.stereo_vision.calibration import undistortRectify
+from image_handlers.base import BaseImageHandler
 from utils.stereo_vision.triangulation import find_depth
 
 
-class StereoImageHandler:
-    def __init__(self, right_handler, left_handler, baseline, focal=8, alpha=60):
+class StereoImageHandler(BaseImageHandler):
+    def __init__(self, right_handler, left_handler, baseline, focal=8, alpha=60, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.right_handler = right_handler
         self.left_handler = left_handler
         self.baseline = baseline
@@ -22,58 +21,83 @@ class StereoImageHandler:
             right_data = self.right_handler.read_next_data()
             left_data = self.left_handler.read_next_data()
 
-            right_image = right_data["image"]
-            left_image = left_data["image"]
-
             right_image_success = right_data["success"]
             left_image_success = left_data["success"]
-
-            right_centers_of_hands = right_data["data"].get("hands_centers", None)
-            left_centers_of_hands = left_data["data"].get("hands_centers", None)
 
             if not right_image_success or not left_image_success:
                 continue
 
+            right_image = right_data["image"]
+            left_image = left_data["image"]
+
+            right_centers_of_hands = right_data["data"].get("hands_centers", None)
+            left_centers_of_hands = left_data["data"].get("hands_centers", None)
+
+            # print("right data", right_data)
+
+            # building new state:
+            self.current_state = {}
+            self.current_state["images"] = []
+            self.current_state["success"] = []
+            self.current_state["data"] = {}
+
+            self.current_state["images"].append(right_image)
+            self.current_state["images"].append(left_image)
+
+            self.current_state["success"].append(right_image_success)
+            self.current_state["success"].append(left_image_success)
+
+            self.current_state["data"]["right_data"] =  right_data["data"]
+            self.current_state["data"]["left_data"] =  left_data["data"]
+
+            self.current_state["data"]["baseline"] = self.baseline
+            self.current_state["data"]["focal"] = self.focal
+            self.current_state["data"]["alpha"] = self.alpha
+
+
             # right_image, left_image = undistortRectify(right_image, left_image)
 
+            # data examples:
+            """
+            current_state: {
+                "images": [image1, image2, ]
+                "success": [success_image1, success_image2, ]
+                "data": {
+                    "baseline": baseline,
+                    "focal": focal,
+                    "alpha": alpha,
+                    "right_data": {
+                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ]
+                    }
+                    "left_data": {
+                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ]
+                    }
+                }
+            }
+            """
+
+            """
+            new_state: {
+                "images": [image1, image2, ]
+                "success": [success_image1, success_image2, ]
+                "data": {
+                    "baseline": baseline,
+                    "focal": focal,
+                    "alpha": alpha,
+                    "right_data": {
+                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ],
+                    }
+                    "left_data": {
+                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ],
+                    }
+                    "hands_depths": [0: depth, 1: depth, ]
+
+                }
+            }
+            """
 
             if right_centers_of_hands and left_centers_of_hands:
-                for right_hand_center, left_hand_center in zip(right_centers_of_hands, left_centers_of_hands):
-
-                    depth = find_depth(
-                        right_hand_center,
-                        left_hand_center,
-                        right_image,
-                        left_image,
-                        self.baseline,
-                        self.focal,
-                        self.alpha,
-                    )
-
-                    print("depth")
-                    print(depth)
-
-                    cv2.putText(
-                    right_image,
-                    f"depth: {str(round(depth, 1))}",
-                    (0, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1.5,
-                    (100, 255, 0),
-                    3,
-                    cv2.LINE_AA,
-                    )
-
-                    cv2.putText(
-                        left_image,
-                        f"depth: {str(round(depth, 1))}",
-                        (0, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1.5,
-                        (100, 255, 0),
-                        3,
-                        cv2.LINE_AA,
-                    )
+                self.implement_processors()
 
 
             cv2.imshow(self.left_handler.window_title, left_image)

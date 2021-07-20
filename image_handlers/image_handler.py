@@ -1,3 +1,4 @@
+from multiprocessing import Manager
 from time import time
 
 import cv2
@@ -17,25 +18,14 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
             input_stream=0,
             window_title="cam process",
             max_buffer_size=1,
-            processors=None
+            processors=()
     ):
-        super().__init__(input_stream, window_title, max_buffer_size)
+        super().__init__(input_stream, window_title, max_buffer_size, processors)
 
         self.prev_frame_time = 0
         self.new_frame_time = 0
 
         self.current_state = {}
-
-        self.processors = processors
-        if not processors:
-            self.processors = []
-
-    def implement_processors(self):
-        for processor in self.processors:
-            self.current_state = processor(self.current_state)
-            if str(processor):
-                print(processor)
-
 
     def display_fps(self):
         font = cv2.FONT_HERSHEY_SIMPLEX

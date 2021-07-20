@@ -16,7 +16,8 @@ mp_hands = mp.solutions.hands
 
 
 class Hand:
-    def __init__(self, hand_landmarks, hand_type, image):
+    def __init__(self, id, hand_landmarks, hand_type, image):
+        self.id = id
         self.landmarks = hand_landmarks
         self.hand_type = hand_type
         self.image = image
@@ -150,10 +151,15 @@ class HandsProcessor(BaseImageProcessor):
 
             self.detected_hands = []
             if results.multi_hand_landmarks:
-                for hand_landmarks, hand_type in zip(
-                    results.multi_hand_landmarks, results.multi_handedness
+                # hand_info[0]: hand_landmarks
+                # hand_info[1]: hand_type
+                for index, hand_info in enumerate(
+                        zip(
+                            results.multi_hand_landmarks,
+                            results.multi_handedness
+                        )
                 ):
-                    hand = Hand(hand_landmarks, hand_type, self.image)
+                    hand = Hand(index, hand_info[0], hand_info[1], self.image)
                     hand.draw_landmarks()
                     self.detected_hands.append(hand)
 
@@ -164,10 +170,10 @@ class HandsProcessor(BaseImageProcessor):
 
     def __str__(self):
         info = ""
-        for hand_index, hand in enumerate(self.detected_hands):
+        for hand in self.detected_hands:
             info = info + \
                    f"window: {self.window_title}\n" \
-                   f"hand id: {hand_index}, distance: {hand.get_depth()}\n" \
+                   f"hand id: {hand.id}, distance: {hand.get_depth()}\n" \
                    f"hand orientation: {hand.orientation}\n" \
                    f"thumb orientation: {hand.thumb_orientation}\n" \
                    f"open set: {hand.get_raised_fingers()}\n" \

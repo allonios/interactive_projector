@@ -4,7 +4,6 @@ cap = cv2.VideoCapture(6)
 
 while cap.isOpened():
     success, image = cap.read()
-
     if not success:
         print("failed to read image")
 
