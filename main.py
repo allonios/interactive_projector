@@ -1,5 +1,6 @@
 from image_handlers.image_handler import MediaPipeHandsImageHandler
 from image_handlers.stereo_vision_handler import StereoImageHandler
+from image_processors.click_event_processor import ClickEventProcessor
 from image_processors.depth_processor import DepthProcessor
 from image_processors.hands_centers_processor import HandsCentersProcessor
 from image_processors.hands_processor import HandsProcessor
@@ -26,7 +27,8 @@ if __name__ == "__main__":
     ]
 
     stereo_processors = [
-        DepthProcessor()
+        DepthProcessor(),
+        ClickEventProcessor(),
     ]
 
     right_handler = MediaPipeHandsImageHandler(

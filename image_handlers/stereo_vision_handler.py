@@ -35,7 +35,7 @@ class StereoImageHandler(BaseImageHandler):
 
             # print("right data", right_data)
 
-            # building new state:
+            # building current state:
             self.current_state = {}
             self.current_state["images"] = []
             self.current_state["success"] = []
