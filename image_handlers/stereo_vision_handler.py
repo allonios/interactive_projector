@@ -36,26 +36,17 @@ class StereoImageHandler(BaseImageHandler):
             # print("right data", right_data)
 
             # building current state:
-            self.current_state = {}
-            self.current_state["images"] = []
-            self.current_state["success"] = []
-            self.current_state["data"] = {}
-
-            self.current_state["images"].append(right_image)
-            self.current_state["images"].append(left_image)
-
-            self.current_state["success"].append(right_image_success)
-            self.current_state["success"].append(left_image_success)
-
-            self.current_state["data"]["right_data"] =  right_data["data"]
-            self.current_state["data"]["left_data"] =  left_data["data"]
-
-            self.current_state["data"]["baseline"] = self.baseline
-            self.current_state["data"]["focal"] = self.focal
-            self.current_state["data"]["alpha"] = self.alpha
+            self.build_new_state(
+                right_image,
+                left_image,
+                right_image_success,
+                left_image_success,
+                right_data,
+                left_data
+            )
 
 
-            # right_image, left_image = undistortRectify(right_image, left_image)
+            # right_image, left_image = undistorted_rectify(right_image, left_image)
 
             # data examples:
             """
@@ -108,3 +99,30 @@ class StereoImageHandler(BaseImageHandler):
                 self.right_handler.stop()
                 # cv2.destroyAllWindows()
                 exit()
+
+    def build_new_state(
+            self,
+            right_image,
+            left_image,
+            right_image_success,
+            left_image_success,
+            right_data,
+            left_data
+    ):
+        self.current_state = {}
+        self.current_state["images"] = []
+        self.current_state["success"] = []
+        self.current_state["data"] = {}
+
+        self.current_state["images"].append(right_image)
+        self.current_state["images"].append(left_image)
+
+        self.current_state["success"].append(right_image_success)
+        self.current_state["success"].append(left_image_success)
+
+        self.current_state["data"]["right_data"] = right_data["data"]
+        self.current_state["data"]["left_data"] = left_data["data"]
+
+        self.current_state["data"]["baseline"] = self.baseline
+        self.current_state["data"]["focal"] = self.focal
+        self.current_state["data"]["alpha"] = self.alpha

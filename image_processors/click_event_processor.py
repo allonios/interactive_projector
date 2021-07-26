@@ -14,8 +14,6 @@ class ClickEventProcessor(BaseMultipleImagesProcessor):
             hand_id = list(depth.keys())[0]
             hand_depth = list(depth.values())[0]
             if hand_depth <= THRESHOLD:
-                print("triggered")
-
                 event_data = {}
                 event_data["right_data"] = self.data["data"]["right_data"]
                 event_data["left_data"] = self.data["data"]["left_data"]

@@ -1,17 +1,12 @@
-import sys
-import cv2
-import numpy as np
 import time
-import imutils
-from matplotlib import pyplot as plt
 
-# Function for stereo vision and depth estimation
-import triangulation as tri
-import calibration
-
+import cv2
 # Mediapipe for face detection
 import mediapipe as mp
-import time
+
+import calibration
+# Function for stereo vision and depth estimation
+import triangulation as tri
 
 mp_facedetector = mp.solutions.face_detection
 mp_draw = mp.solutions.drawing_utils
@@ -40,7 +35,7 @@ with mp_facedetector.FaceDetection(min_detection_confidence=0.7) as face_detecti
 
     ################## CALIBRATION #########################################################
 
-        frame_right, frame_left = calibration.undistortRectify(frame_right, frame_left)
+        frame_right, frame_left = calibration.undistorted_rectify(frame_right, frame_left)
 
     ########################################################################################
 
