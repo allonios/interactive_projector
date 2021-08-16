@@ -88,6 +88,23 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
             # the BGR image to RGB.
             self.current_state["image"] = cv2.flip(self.current_state["image"], 1)
 
+            self.current_state["image"] = cv2.resize(
+                self.current_state["image"],
+                None,
+                fx=5,
+                fy=5,
+                interpolation=cv2.INTER_LINEAR
+            )
+
+            # cropping the image
+            self.current_state["image"] = self.current_state["image"][
+                int(self.current_state["image"].shape[0]/3):
+                int(self.current_state["image"].shape[0]/3) * 2,
+
+                int(self.current_state["image"].shape[1]/3):
+                int(self.current_state["image"].shape[1]/3) * 2,
+            ]
+
             self.implement_processors()
 
 
@@ -95,13 +112,54 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
 
             yield self.current_state
 
+min_detection_confidence = 0.5
+
+processors = [
+    HandsProcessor(
+        min_detection_confidence=min_detection_confidence,
+        window_title="right",
+    ),
+    HandsCentersProcessor()
+]
+
 # Testing
-# handler1 = MediaPipeHandsImageHandler(0, "1", min_detection_confidence=0.7)
-# handler2 = MediaPipeHandsImageHandler(2, "2", min_detection_confidence=0.7)
-#
+handler1 = MediaPipeHandsImageHandler(
+    input_stream=0,
+    window_title="1",
+    processors=processors,
+)
+handler2 = MediaPipeHandsImageHandler(
+    input_stream=6,
+    window_title="2",
+    processors=processors,
+)
+
+handler1.start()
+while handler1.process.is_alive():
+    data = handler1.read_next_data()
+
+    image_success = data["success"]
+
+    if not image_success:
+        continue
+
+    image = data["image"]
+
+    # image = image[
+    #     int(image.shape[0]/3): int(image.shape[0]/3) * 2,
+    #     int(image.shape[1]/3): int(image.shape[1]/3) * 2,
+    # ]
+
+    centers_of_hands = data["data"].get("hands_centers", None)
+
+    cv2.imshow(handler1.window_title, image)
+    if cv2.waitKey(1) & 0xFF == 27:
+        handler1.stop()
+        # cv2.destroyAllWindows()
+        exit()
+
 # handler1.start()
 # handler2.start()
-#
 # while handler1.process.is_alive() and handler1.process.is_alive():
 #     image1 = handler1.read_next_data()
 #     image2 = handler2.read_next_data()

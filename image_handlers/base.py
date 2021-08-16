@@ -8,6 +8,8 @@ class BaseImageHandler:
     def __init__(self, input_stream=0, window_title="cam process", max_buffer_size=1, processors=()):
         self.input_stream = input_stream
         self.cap = cv2.VideoCapture(input_stream)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.window_title = window_title
         self.buffer = Queue(maxsize=max_buffer_size)
         self.processors = processors
@@ -47,7 +49,6 @@ class BaseImageHandlerProcess(BaseImageHandler):
     def __init__(self, input_stream=0, window_title="cam process", max_buffer_size=1, processors=()):
         super().__init__(input_stream, window_title, max_buffer_size, processors)
         self.process = Process()
-        print(self.processors)
 
     def start(self):
         self.process = Process(target=self.read_input)
