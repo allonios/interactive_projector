@@ -1,14 +1,14 @@
 from collections import deque
-from multiprocessing import Manager, get_context, current_process
-from multiprocessing.queues import Queue
 from multiprocessing.managers import BaseManager
 
 
 class BufferManager(BaseManager):
     pass
 
+
 class Empty(BaseException):
     pass
+
 
 class Buffer:
     def __init__(self, initial_data=(), max_size=1):

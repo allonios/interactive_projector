@@ -11,7 +11,7 @@ class HandsCentersProcessor(BaseImageProcessor):
                         hand.landmarks.landmark[9].y * self.image.shape[0],
                     )
                 },
-                self.data["data"]["detected_hands"]
+                self.data["data"]["detected_hands"],
             )
         )
         # removing detected hands object because it contains some google mp objects

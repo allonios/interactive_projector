@@ -42,6 +42,7 @@ class BaseImageProcessor(metaclass=ABCMeta):
     def __str__(self):
         return ""
 
+
 class BaseMultipleImagesProcessor(metaclass=ABCMeta):
     """
     class for base multiple images processors.
@@ -61,7 +62,6 @@ class BaseMultipleImagesProcessor(metaclass=ABCMeta):
         self.data = data
         self.images = data["images"]
         return self.process_data()
-
 
     @abstractmethod
     def process_data(self):

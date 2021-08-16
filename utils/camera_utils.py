@@ -1,7 +1,12 @@
 from multiprocessing import Process, Queue
 from queue import Empty
+from time import time
 
 import cv2
+import mediapipe as mp
+
+mp_drawing = mp.solutions.drawing_utils
+mp_hands = mp.solutions.hands
 
 
 class CameraProcess:
@@ -65,17 +70,14 @@ class CameraProcess:
 #         cv2.destroyAllWindows()
 
 
-
 class MediaPipeCameraProcess(CameraProcess):
-
     def __init__(self, source=0, window_title="cam process", max_buffer_size=1):
         super().__init__(source, window_title, max_buffer_size)
         self.prev_frame_time = 0
 
     def process_input(self):
         with mp_hands.Hands(
-                min_detection_confidence=0.5,
-                min_tracking_confidence=0.5
+            min_detection_confidence=0.5, min_tracking_confidence=0.5
         ) as hands:
             while self.cap.isOpened():
                 success, image = self.cap.read()
@@ -100,10 +102,8 @@ class MediaPipeCameraProcess(CameraProcess):
                 if results1.multi_hand_landmarks:
                     for hand_landmarks in results1.multi_hand_landmarks:
                         hand_x, hand_y = (
-                            hand_landmarks.landmark[9].x
-                            * image.shape[1],
-                            hand_landmarks.landmark[9].y
-                            * image.shape[0],
+                            hand_landmarks.landmark[9].x * image.shape[1],
+                            hand_landmarks.landmark[9].y * image.shape[0],
                         )
 
                         cv2.circle(
@@ -130,6 +130,7 @@ class MediaPipeCameraProcess(CameraProcess):
                 )
 
                 yield image
+
 
 # Testing
 # cam1 = MediaPipeCameraProcess(0, "cam-process-1")

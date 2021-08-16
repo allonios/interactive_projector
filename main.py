@@ -15,7 +15,7 @@ if __name__ == "__main__":
             min_detection_confidence=min_detection_confidence,
             window_title="right",
         ),
-        HandsCentersProcessor()
+        HandsCentersProcessor(),
     ]
 
     left_handler_processors = [
@@ -23,7 +23,7 @@ if __name__ == "__main__":
             min_detection_confidence=min_detection_confidence,
             window_title="left",
         ),
-        HandsCentersProcessor()
+        HandsCentersProcessor(),
     ]
 
     stereo_processors = [
@@ -44,10 +44,7 @@ if __name__ == "__main__":
     )
 
     stereo_vision = StereoImageHandler(
-        right_handler,
-        left_handler,
-        baseline=11,
-        processors=stereo_processors
+        right_handler, left_handler, baseline=11, processors=stereo_processors
     )
 
     stereo_vision.handle()

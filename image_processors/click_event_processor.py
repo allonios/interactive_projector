@@ -5,6 +5,7 @@ from image_processors.base import BaseMultipleImagesProcessor
 
 THRESHOLD = 30
 
+
 class ClickEventProcessor(BaseMultipleImagesProcessor):
     def process_data(self) -> dict:
 

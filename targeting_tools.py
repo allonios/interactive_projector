@@ -18,19 +18,19 @@ import traceback
 import cv2
 import numpy as np
 
-
 # ------------------------------
 # Testing
 # ------------------------------
 
+
 def run():
     # ------------------------------
-    # full error catch 
+    # full error catch
     # ------------------------------
     try:
 
         # ------------------------------
-        # set up cameras 
+        # set up cameras
         # ------------------------------
 
         # cameras variables
@@ -68,16 +68,15 @@ def run():
         ct2.start()
 
         # ------------------------------
-        # set up angles 
+        # set up angles
         # ------------------------------
 
         # cameras are the same, so only 1 needed
-        angler = Frame_Angles(pixel_width, pixel_height, angle_width,
-                              angle_height)
+        angler = Frame_Angles(pixel_width, pixel_height, angle_width, angle_height)
         angler.build_frame()
 
         # ------------------------------
-        # set up motion detection 
+        # set up motion detection
         # ------------------------------
 
         # motion camera1
@@ -105,14 +104,14 @@ def run():
         targeter2.targets_draw = True
 
         # ------------------------------
-        # stabilize 
+        # stabilize
         # ------------------------------
 
         # pause to stabilize
         time.sleep(0.5)
 
         # ------------------------------
-        # targeting loop 
+        # targeting loop
         # ------------------------------
 
         # variables
@@ -174,18 +173,21 @@ def run():
                         y2m = sum(y2k) / klen
 
                         # get angles from camera centers
-                        xlangle, ylangle = angler.angles_from_center(x1m, y1m,
-                                                                     top_left=True,
-                                                                     degrees=True)
-                        xrangle, yrangle = angler.angles_from_center(x2m, y2m,
-                                                                     top_left=True,
-                                                                     degrees=True)
+                        xlangle, ylangle = angler.angles_from_center(
+                            x1m, y1m, top_left=True, degrees=True
+                        )
+                        xrangle, yrangle = angler.angles_from_center(
+                            x2m, y2m, top_left=True, degrees=True
+                        )
 
                         # triangulate
-                        X, Y, Z, D = angler.location(camera_separation,
-                                                     (xlangle, ylangle),
-                                                     (xrangle, yrangle),
-                                                     center=True, degrees=True)
+                        X, Y, Z, D = angler.location(
+                            camera_separation,
+                            (xlangle, ylangle),
+                            (xrangle, yrangle),
+                            center=True,
+                            degrees=True,
+                        )
 
             # display camera centers
             angler.frame_add_crosshairs(frame1)
@@ -194,22 +196,25 @@ def run():
             # display coordinate data
             fps1 = int(ct1.current_frame_rate)
             fps2 = int(ct2.current_frame_rate)
-            text = 'X: {:3.1f}\nY: {:3.1f}\nZ: {:3.1f}\nD: {:3.1f}\nFPS: {}/{}'.format(
-                X, Y, Z, D, fps1, fps2)
+            text = "X: {:3.1f}\nY: {:3.1f}\nZ: {:3.1f}\nD: {:3.1f}\nFPS: {}/{}".format(
+                X, Y, Z, D, fps1, fps2
+            )
             lineloc = 0
             lineheight = 30
-            for t in text.split('\n'):
+            for t in text.split("\n"):
                 lineloc += lineheight
-                cv2.putText(frame1,
-                            t,
-                            (10, lineloc),  # location
-                            cv2.FONT_HERSHEY_PLAIN,  # font
-                            # cv2.FONT_HERSHEY_SIMPLEX, # font
-                            1.5,  # size
-                            (0, 255, 0),  # color
-                            1,  # line width
-                            cv2.LINE_AA,  #
-                            False)  #
+                cv2.putText(
+                    frame1,
+                    t,
+                    (10, lineloc),  # location
+                    cv2.FONT_HERSHEY_PLAIN,  # font
+                    # cv2.FONT_HERSHEY_SIMPLEX, # font
+                    1.5,  # size
+                    (0, 255, 0),  # color
+                    1,  # line width
+                    cv2.LINE_AA,  #
+                    False,
+                )  #
 
             # display current target
             if x1k:
@@ -222,21 +227,19 @@ def run():
 
             # detect keys
             key = cv2.waitKey(1) & 0xFF
-            if cv2.getWindowProperty('Left Camera 1',
-                                     cv2.WND_PROP_VISIBLE) < 1:
+            if cv2.getWindowProperty("Left Camera 1", cv2.WND_PROP_VISIBLE) < 1:
                 break
-            elif cv2.getWindowProperty('Right Camera 2',
-                                       cv2.WND_PROP_VISIBLE) < 1:
+            elif cv2.getWindowProperty("Right Camera 2", cv2.WND_PROP_VISIBLE) < 1:
                 break
-            elif key == ord('q'):
+            elif key == ord("q"):
                 break
             elif key != 255:
-                print('KEY PRESS:', [chr(key)])
+                print("KEY PRESS:", [chr(key)])
 
     # ------------------------------
-    # full error catch 
+    # full error catch
     # ------------------------------
-    except:
+    except BaseException:
         print(traceback.format_exc())
 
     # ------------------------------
@@ -246,25 +249,26 @@ def run():
     # close camera1
     try:
         ct1.stop()
-    except:
+    except BaseException:
         pass
 
     # close camera2
     try:
         ct2.stop()
-    except:
+    except BaseException:
         pass
 
     # kill frames
     cv2.destroyAllWindows()
 
     # done
-    print('DONE')
+    print("DONE")
 
 
 # ------------------------------
 # Camera Tread
 # ------------------------------
+
 
 class Camera_Thread:
     # IMPORTANT: a queue is much more efficient than a deque
@@ -358,8 +362,9 @@ class Camera_Thread:
         self.camera_area = self.camera_width * self.camera_height
 
         # black frame (filler)
-        self.black_frame = np.zeros((self.camera_height, self.camera_width, 3),
-                                    np.uint8)
+        self.black_frame = np.zeros(
+            (self.camera_height, self.camera_width, 3), np.uint8
+        )
 
         # set run state
         self.frame_grab_run = True
@@ -381,7 +386,7 @@ class Camera_Thread:
         if self.camera:
             try:
                 self.camera.release()
-            except:
+            except BaseException:
                 pass
         self.camera = None
 
@@ -482,6 +487,7 @@ class Camera_Thread:
 # Motion Detection
 # ------------------------------
 
+
 class Frame_Motion:
     # ------------------------------
     # User Instructions
@@ -509,8 +515,12 @@ class Frame_Motion:
     # target select
     targets_max = 4  # max targets returned
     target_on_contour = True  # else use box size
-    target_return_box = False  # True = return (x,y,bx,by,bw,bh), else check target_return_size
-    target_return_size = False  # True = return (x,y,percent_frame_size), else just (x,y)
+    target_return_box = (
+        False  # True = return (x,y,bx,by,bw,bh), else check target_return_size
+    )
+    target_return_size = (
+        False  # True = return (x,y,percent_frame_size), else just (x,y)
+    )
 
     # display contour
     contour_draw = True
@@ -552,8 +562,7 @@ class Frame_Motion:
         frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # blur
-        frame2 = cv2.GaussianBlur(frame2,
-                                  (self.gaussian_blur, self.gaussian_blur), 0)
+        frame2 = cv2.GaussianBlur(frame2, (self.gaussian_blur, self.gaussian_blur), 0)
 
         # initialize compare frame
         if self.last_frame is None:
@@ -564,16 +573,17 @@ class Frame_Motion:
         frame3 = cv2.absdiff(self.last_frame, frame2)
 
         # threshold
-        frame3 = cv2.threshold(frame3, self.threshold, 255, cv2.THRESH_BINARY)[
-            1]
+        frame3 = cv2.threshold(frame3, self.threshold, 255, cv2.THRESH_BINARY)[1]
 
         # dilation
-        frame3 = cv2.dilate(frame3, self.dilation_kernel,
-                            iterations=self.dilation_iterations)
+        frame3 = cv2.dilate(
+            frame3, self.dilation_kernel, iterations=self.dilation_iterations
+        )
 
         # get contours
-        contours, hierarchy = cv2.findContours(frame3, cv2.RETR_EXTERNAL,
-                                               cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(
+            frame3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
 
         # targets
         targets = []
@@ -587,18 +597,16 @@ class Frame_Motion:
             # target on contour
             if self.target_on_contour:
                 p = 100 * ca / area
-                if (p >= self.contour_min_area) and (
-                        p <= self.contour_max_area):
+                if (p >= self.contour_min_area) and (p <= self.contour_max_area):
                     M = cv2.moments(c)  # ;print( M )
-                    tx = int(M['m10'] / M['m00'])
-                    ty = int(M['m01'] / M['m00'])
+                    tx = int(M["m10"] / M["m00"])
+                    ty = int(M["m01"] / M["m00"])
                     targets.append((p, tx, ty, bx, by, bw, bh, c))
 
             # target on contour box
             else:
                 p = 100 * ba / area
-                if (p >= self.contour_min_area) and (
-                        p <= self.contour_max_area):
+                if (p >= self.contour_min_area) and (p <= self.contour_max_area):
                     tx = bx + int(bw / 2)
                     ty = by + int(bh / 2)
                     targets.append((p, tx, ty, bx, by, bw, bh, c))
@@ -606,46 +614,65 @@ class Frame_Motion:
         # select targets
         targets.sort()
         targets.reverse()
-        targets = targets[:self.targets_max]
+        targets = targets[: self.targets_max]
 
         # add contours to frame
         if self.contour_draw:
             for size, x, y, bx, by, bw, bh, c in targets:
-                cv2.drawContours(frame, [c], 0, self.contour_color,
-                                 self.contour_line)
-                cv2.circle(frame, (x, y), self.contour_point,
-                           self.contour_color, self.contour_pline)
+                cv2.drawContours(frame, [c], 0, self.contour_color, self.contour_line)
+                cv2.circle(
+                    frame,
+                    (x, y),
+                    self.contour_point,
+                    self.contour_color,
+                    self.contour_pline,
+                )
 
         # add contour boxes to frame
         if self.contour_box_draw:
             for size, x, y, bx, by, bw, bh, c in targets:
-                cv2.rectangle(frame, (bx, by), (bx + bw, by + bh),
-                              self.contour_box_color, self.contour_box_line)
-                cv2.circle(frame, (bx + int(bw / 2), by + int(bh / 2)),
-                           self.contour_box_point, self.contour_box_color,
-                           self.contour_box_pline)
+                cv2.rectangle(
+                    frame,
+                    (bx, by),
+                    (bx + bw, by + bh),
+                    self.contour_box_color,
+                    self.contour_box_line,
+                )
+                cv2.circle(
+                    frame,
+                    (bx + int(bw / 2), by + int(bh / 2)),
+                    self.contour_box_point,
+                    self.contour_box_color,
+                    self.contour_box_pline,
+                )
 
         # add targets to frame
         if self.targets_draw:
             for size, x, y, bx, by, bw, bh, c in targets:
-                cv2.circle(frame, (x, y), self.targets_point,
-                           self.targets_color, self.targets_pline)
+                cv2.circle(
+                    frame,
+                    (x, y),
+                    self.targets_point,
+                    self.targets_color,
+                    self.targets_pline,
+                )
 
         # reset last frame
         self.last_frame = frame2
 
         # return target x,y
         if self.target_return_box:
-            return [(x, y, bx, by, bw, bh) for (size, x, y, bx, by, bw, bh, c)
-                    in targets]
+            return [
+                (x, y, bx, by, bw, bh) for (size, x, y, bx, by, bw, bh, c) in targets
+            ]
         elif self.target_return_size:
-            return [(x, y, size) for (size, x, y, bx, by, bw, bh, c) in
-                    targets]
+            return [(x, y, size) for (size, x, y, bx, by, bw, bh, c) in targets]
         else:
             return [(x, y) for (size, x, y, bx, by, bw, bh, c) in targets]
 
-    def frame_add_crosshairs(self, frame, x, y, r=20, lc=(0, 0, 255),
-                             cc=(0, 0, 255), lw=1, cw=1):
+    def frame_add_crosshairs(
+        self, frame, x, y, r=20, lc=(0, 0, 255), cc=(0, 0, 255), lw=1, cw=1
+    ):
 
         x = int(round(x, 0))
         y = int(round(y, 0))
@@ -660,6 +687,7 @@ class Frame_Motion:
 # ------------------------------
 # Frame Angles and Distance
 # ------------------------------
+
 
 class Frame_Angles:
     # ------------------------------
@@ -710,8 +738,9 @@ class Frame_Angles:
     # Init Functions
     # ------------------------------
 
-    def __init__(self, pixel_width=None, pixel_height=None, angle_width=None,
-                 angle_height=None):
+    def __init__(
+        self, pixel_width=None, pixel_height=None, angle_width=None, angle_height=None
+    ):
 
         # full frame dimensions in pixels
         if type(pixel_width) in (int, float):
@@ -735,7 +764,8 @@ class Frame_Angles:
         # fix angle height
         if not self.angle_height:
             self.angle_height = self.angle_width * (
-                        self.pixel_height / self.pixel_width)
+                self.pixel_height / self.pixel_width
+            )
 
         # center point (also max pixel distance from origin)
         self.x_origin = int(self.pixel_width / 2)
@@ -744,10 +774,8 @@ class Frame_Angles:
         # theoretical distance in pixels from camera to frame
         # this is the adjacent-side length in tangent calculations
         # the pixel x,y inputs is the opposite-side lengths
-        self.x_adjacent = self.x_origin / math.tan(
-            math.radians(self.angle_width / 2))
-        self.y_adjacent = self.y_origin / math.tan(
-            math.radians(self.angle_height / 2))
+        self.x_adjacent = self.x_origin / math.tan(math.radians(self.angle_width / 2))
+        self.y_adjacent = self.y_origin / math.tan(math.radians(self.angle_height / 2))
 
     # ------------------------------
     # Pixels-to-Angles Functions
@@ -791,8 +819,7 @@ class Frame_Angles:
             x = math.radians(x)
             y = math.radians(y)
 
-        return int(self.x_adjacent * math.tan(x)), int(
-            self.y_adjacent * math.tan(y))
+        return int(self.x_adjacent * math.tan(x)), int(self.y_adjacent * math.tan(y))
 
     # ------------------------------
     # 3D Functions
@@ -802,7 +829,7 @@ class Frame_Angles:
         return self.distance_from_origin(*coordinates)
 
     def distance_from_origin(self, *coordinates):
-        return math.sqrt(sum([x ** 2 for x in coordinates]))
+        return math.sqrt(sum(x ** 2 for x in coordinates))
 
     def intersection(self, pdistance, langle, rangle, degrees=False):
 
@@ -840,8 +867,7 @@ class Frame_Angles:
         # done
         return X, Y
 
-    def location(self, pdistance, lcamera, rcamera, center=False,
-                 degrees=True):
+    def location(self, pdistance, lcamera, rcamera, center=False, degrees=True):
 
         # return (X,Y,Z,D) of target from left-camera-center (or baseline midpoint if center-True)
 
@@ -892,13 +918,24 @@ class Frame_Angles:
 
         # add crosshairs to frame to aid in aligning
 
-        cv2.line(frame, (0, self.y_origin), (self.pixel_width, self.y_origin),
-                 (0, 255, 0), 1)
-        cv2.line(frame, (self.x_origin, 0), (self.x_origin, self.pixel_height),
-                 (0, 255, 0), 1)
+        cv2.line(
+            frame, (0, self.y_origin), (self.pixel_width, self.y_origin), (0, 255, 0), 1
+        )
+        cv2.line(
+            frame,
+            (self.x_origin, 0),
+            (self.x_origin, self.pixel_height),
+            (0, 255, 0),
+            1,
+        )
 
-        cv2.circle(frame, (self.x_origin, self.y_origin),
-                   int(round(self.y_origin / 8, 0)), (0, 255, 0), 1)
+        cv2.circle(
+            frame,
+            (self.x_origin, self.y_origin),
+            int(round(self.y_origin / 8, 0)),
+            (0, 255, 0),
+            1,
+        )
 
     def frame_add_degrees(self, frame):
 
@@ -912,25 +949,41 @@ class Frame_Angles:
 
             # draw verticals
             if x <= self.x_origin:
-                cv2.line(frame, (self.x_origin - x, 0),
-                         (self.x_origin - x, self.pixel_height), (255, 0, 255),
-                         1)
-                cv2.line(frame, (self.x_origin + x, 0),
-                         (self.x_origin + x, self.pixel_height), (255, 0, 255),
-                         1)
+                cv2.line(
+                    frame,
+                    (self.x_origin - x, 0),
+                    (self.x_origin - x, self.pixel_height),
+                    (255, 0, 255),
+                    1,
+                )
+                cv2.line(
+                    frame,
+                    (self.x_origin + x, 0),
+                    (self.x_origin + x, self.pixel_height),
+                    (255, 0, 255),
+                    1,
+                )
 
             # draw horizontals
             if y <= self.y_origin:
-                cv2.line(frame, (0, self.y_origin - y),
-                         (self.pixel_width, self.y_origin - y), (255, 0, 255),
-                         1)
-                cv2.line(frame, (0, self.y_origin + y),
-                         (self.pixel_width, self.y_origin + y), (255, 0, 255),
-                         1)
+                cv2.line(
+                    frame,
+                    (0, self.y_origin - y),
+                    (self.pixel_width, self.y_origin - y),
+                    (255, 0, 255),
+                    1,
+                )
+                cv2.line(
+                    frame,
+                    (0, self.y_origin + y),
+                    (self.pixel_width, self.y_origin + y),
+                    (255, 0, 255),
+                    1,
+                )
 
-    def frame_make_target(self,
-                          outfilename='targeting_angles_frame_target.svg',
-                          openfile=False):
+    def frame_make_target(
+        self, outfilename="targeting_angles_frame_target.svg", openfile=False
+    ):
 
         # this will make a printable target that matches the frame_add_degrees output
         # use this to test that your angle values are set up properly
@@ -953,24 +1006,27 @@ class Frame_Angles:
 
         # crosshairs
         svg += '<line x1="{}" x2="{}" y1="{}" y2="{}" stroke-width="1" stroke="green"/>\n'.format(
-            0, width, y_origin, y_origin)
+            0, width, y_origin, y_origin
+        )
         svg += '<line x1="{}" x2="{}" y1="{}" y2="{}" stroke-width="1" stroke="green"/>\n'.format(
-            x_origin, x_origin, 0, height)
+            x_origin, x_origin, 0, height
+        )
 
         # center circle
         svg += '<circle cx="{}" cy="{}" r="{}" stroke="green" stroke-width="1" fill="none"/>'.format(
-            x_origin, y_origin, y_origin / 8)
+            x_origin, y_origin, y_origin / 8
+        )
 
         # distance from screen line
         svg += '<line x1="{0}" x2="{1}" y1="{2}" y2="{2}" stroke-width="1" stroke="red"/>\n'.format(
-            x_origin - distance / 2, x_origin + distance / 2,
-            y_origin - y_origin / 8)
+            x_origin - distance / 2, x_origin + distance / 2, y_origin - y_origin / 8
+        )
         svg += '<line x1="{0}" x2="{0}" y1="{1}" y2="{2}" stroke-width="1" stroke="red"/>\n'.format(
-            x_origin - distance / 2, y_origin - y_origin / 16,
-            y_origin - y_origin / 8)
+            x_origin - distance / 2, y_origin - y_origin / 16, y_origin - y_origin / 8
+        )
         svg += '<line x1="{0}" x2="{0}" y1="{1}" y2="{2}" stroke-width="1" stroke="red"/>\n'.format(
-            x_origin + distance / 2, y_origin - y_origin / 16,
-            y_origin - y_origin / 8)
+            x_origin + distance / 2, y_origin - y_origin / 16, y_origin - y_origin / 8
+        )
 
         # add degree lines
         for angle in range(10, 95, 10):
@@ -979,28 +1035,33 @@ class Frame_Angles:
             # draw verticals
             if pixels <= x_origin:
                 svg += '<line x1="{0}" x2="{0}" y1="0" y2="{1}" stroke-width="1" stroke="black"/>\n'.format(
-                    x_origin - pixels, height)
+                    x_origin - pixels, height
+                )
                 svg += '<line x1="{0}" x2="{0}" y1="0" y2="{1}" stroke-width="1" stroke="black"/>\n'.format(
-                    x_origin + pixels, height)
+                    x_origin + pixels, height
+                )
 
             # draw horizontals
             if pixels <= y_origin:
                 svg += '<line x1="0" x2="{0}" y1="{1}" y2="{1}" stroke-width="1" stroke="black"/>\n'.format(
-                    width, y_origin - pixels)
+                    width, y_origin - pixels
+                )
                 svg += '<line x1="0" x2="{0}" y1="{1}" y2="{1}" stroke-width="1" stroke="black"/>\n'.format(
-                    width, y_origin + pixels)
+                    width, y_origin + pixels
+                )
 
         # end svg
-        svg += '</svg>'
+        svg += "</svg>"
 
         # write file
-        outfile = open(outfilename, 'w')
+        outfile = open(outfilename, "w")
         outfile.write(svg)
         outfile.close()
 
         # open file
         if openfile:
             import webbrowser
+
             webbrowser.open(os.path.abspath(outfilename))
 
 
@@ -1008,7 +1069,7 @@ class Frame_Angles:
 # Testing
 # ------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()
 
 # ------------------------------

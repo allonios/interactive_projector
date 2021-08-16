@@ -5,7 +5,13 @@ import cv2
 
 
 class BaseImageHandler:
-    def __init__(self, input_stream=0, window_title="cam process", max_buffer_size=1, processors=()):
+    def __init__(
+        self,
+        input_stream=0,
+        window_title="cam process",
+        max_buffer_size=1,
+        processors=(),
+    ):
         self.input_stream = input_stream
         self.cap = cv2.VideoCapture(input_stream)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -46,7 +52,13 @@ class BaseImageHandler:
 
 
 class BaseImageHandlerProcess(BaseImageHandler):
-    def __init__(self, input_stream=0, window_title="cam process", max_buffer_size=1, processors=()):
+    def __init__(
+        self,
+        input_stream=0,
+        window_title="cam process",
+        max_buffer_size=1,
+        processors=(),
+    ):
         super().__init__(input_stream, window_title, max_buffer_size, processors)
         self.process = Process()
 

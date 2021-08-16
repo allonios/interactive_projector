@@ -1,11 +1,12 @@
 import cv2
 
 from image_handlers.base import BaseImageHandler
-from utils.stereo_vision.triangulation import find_depth
 
 
 class StereoImageHandler(BaseImageHandler):
-    def __init__(self, right_handler, left_handler, baseline, focal=8, alpha=60, *args, **kwargs):
+    def __init__(
+        self, right_handler, left_handler, baseline, focal=8, alpha=60, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.right_handler = right_handler
         self.left_handler = left_handler
@@ -17,7 +18,10 @@ class StereoImageHandler(BaseImageHandler):
         self.right_handler.start()
         self.left_handler.start()
 
-        while self.right_handler.process.is_alive() and self.left_handler.process.is_alive():
+        while (
+            self.right_handler.process.is_alive()
+            and self.left_handler.process.is_alive()
+        ):
             right_data = self.right_handler.read_next_data()
             left_data = self.left_handler.read_next_data()
 
@@ -42,9 +46,8 @@ class StereoImageHandler(BaseImageHandler):
                 right_image_success,
                 left_image_success,
                 right_data,
-                left_data
+                left_data,
             )
-
 
             # right_image, left_image = undistorted_rectify(right_image, left_image)
 
@@ -90,7 +93,6 @@ class StereoImageHandler(BaseImageHandler):
             if right_centers_of_hands and left_centers_of_hands:
                 self.implement_processors()
 
-
             cv2.imshow(self.left_handler.window_title, left_image)
             cv2.imshow(self.right_handler.window_title, right_image)
 
@@ -101,13 +103,13 @@ class StereoImageHandler(BaseImageHandler):
                 exit()
 
     def build_new_state(
-            self,
-            right_image,
-            left_image,
-            right_image_success,
-            left_image_success,
-            right_data,
-            left_data
+        self,
+        right_image,
+        left_image,
+        right_image_success,
+        left_image_success,
+        right_data,
+        left_data,
     ):
         self.current_state = {}
         self.current_state["images"] = []

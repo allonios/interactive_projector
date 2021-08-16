@@ -1,4 +1,3 @@
-from multiprocessing import Manager
 from time import time
 
 import cv2
@@ -14,11 +13,11 @@ mp_hands = mp.solutions.hands
 
 class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
     def __init__(
-            self,
-            input_stream=0,
-            window_title="cam process",
-            max_buffer_size=1,
-            processors=()
+        self,
+        input_stream=0,
+        window_title="cam process",
+        max_buffer_size=1,
+        processors=(),
     ):
         super().__init__(input_stream, window_title, max_buffer_size, processors)
 
@@ -44,37 +43,28 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
             cv2.LINE_AA,
         )
 
-
     def save_info(self, image, info):
-        import os, re
+        import os
+        import re
+
         try:
             last_image_count = max(
                 map(
-                    lambda file_name: int(
-                        re.search("(\d+)", file_name).group()),
+                    lambda file_name: int(re.search(r"(\d+)", file_name).group()),
                     filter(
-                        lambda x: x if re.search(
-                            "saved-image-\d+", x
-                        ) else None,
-                        os.listdir("../saved")
-                    )
+                        lambda x: x if re.search(r"saved-image-\d+", x) else None,
+                        os.listdir("../saved"),
+                    ),
                 )
             )
         # ValueError: max() arg is an empty sequence
         except ValueError:
             last_image_count = 0
 
-        cv2.imwrite(
-            f"saved/saved-image-{last_image_count + 1}.png",
-            image
-        )
-        file = open(
-            f"saved/saved-image-info-{last_image_count + 1}.txt",
-            "w"
-        )
+        cv2.imwrite(f"saved/saved-image-{last_image_count + 1}.png", image)
+        file = open(f"saved/saved-image-info-{last_image_count + 1}.txt", "w")
         file.write(info)
         file.close()
-
 
     def handle(self):
         while self.cap.isOpened():
@@ -93,24 +83,27 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
                 None,
                 fx=5,
                 fy=5,
-                interpolation=cv2.INTER_LINEAR
+                interpolation=cv2.INTER_LINEAR,
             )
 
             # cropping the image
             self.current_state["image"] = self.current_state["image"][
-                int(self.current_state["image"].shape[0]/3):
-                int(self.current_state["image"].shape[0]/3) * 2,
-
-                int(self.current_state["image"].shape[1]/3):
-                int(self.current_state["image"].shape[1]/3) * 2,
+                int(self.current_state["image"].shape[0] / 3) : int(
+                    self.current_state["image"].shape[0] / 3
+                )
+                * 2,
+                int(self.current_state["image"].shape[1] / 3) : int(
+                    self.current_state["image"].shape[1] / 3
+                )
+                * 2,
             ]
 
             self.implement_processors()
 
-
             self.display_fps()
 
             yield self.current_state
+
 
 min_detection_confidence = 0.5
 
@@ -119,7 +112,7 @@ processors = [
         min_detection_confidence=min_detection_confidence,
         window_title="right",
     ),
-    HandsCentersProcessor()
+    HandsCentersProcessor(),
 ]
 
 # Testing

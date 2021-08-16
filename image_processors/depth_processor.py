@@ -1,6 +1,8 @@
+import cv2
+
 from image_processors.base import BaseMultipleImagesProcessor
 from utils.stereo_vision.triangulation import find_depth
-import cv2
+
 
 class DepthProcessor(BaseMultipleImagesProcessor):
     def process_data(self):
@@ -17,8 +19,7 @@ class DepthProcessor(BaseMultipleImagesProcessor):
         self.data["data"]["hands_depths"] = []
 
         for right_hand_info, left_hand_info in zip(
-                right_centers_of_hands,
-                left_centers_of_hands
+            right_centers_of_hands, left_centers_of_hands
         ):
             hand_id = list(right_hand_info.keys())[0]
 
@@ -38,11 +39,7 @@ class DepthProcessor(BaseMultipleImagesProcessor):
             print("depth")
             print(depth)
 
-            self.data["data"]["hands_depths"].append(
-                {
-                    hand_id: depth
-                }
-            )
+            self.data["data"]["hands_depths"].append({hand_id: depth})
 
             cv2.putText(
                 right_image,

@@ -13,22 +13,12 @@ while cap.isOpened():
 
     cv2.imshow("Image", image)
 
-
-    image = cv2.resize(
-        image,
-        None,
-        fx=5,
-        fy=5,
-        interpolation=cv2.INTER_LINEAR
-    )
+    image = cv2.resize(image, None, fx=5, fy=5, interpolation=cv2.INTER_LINEAR)
 
     # cropping the image
     zoomed = image[
-        int(image.shape[0] / 5):
-        int(image.shape[0] / 5) * 2,
-
-        int(image.shape[1] / 5):
-        int(image.shape[1] / 5) * 2,
+        int(image.shape[0] / 5) : int(image.shape[0] / 5) * 2,
+        int(image.shape[1] / 5) : int(image.shape[1] / 5) * 2,
     ]
 
     print(image.shape)

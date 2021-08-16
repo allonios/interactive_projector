@@ -4,12 +4,9 @@ import cv2
 import mediapipe as mp
 
 from image_processors.base import BaseImageProcessor
-from utils.utils import (
-    FINGERS_INDEXES,
-    FingerLandmarksPairsFactory,
-    Orientation,
-    get_rotate_landmarks, calculate_collection_average_distance,
-)
+from utils.utils import (FINGERS_INDEXES, FingerLandmarksPairsFactory,
+                         Orientation, calculate_collection_average_distance,
+                         get_rotate_landmarks)
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -61,9 +58,7 @@ class Hand:
 
     def get_depth(self):
         return calculate_collection_average_distance(
-            [0, 1, 2, 5, 9, 13, 17],
-            self.landmarks.landmark,
-            self.image.shape
+            [0, 1, 2, 5, 9, 13, 17], self.landmarks.landmark, self.image.shape
         )
         # return calculate_average_distance(self.landmarks.landmark, self.image.shape)
 
@@ -114,12 +109,12 @@ class Hand:
 
 class HandsProcessor(BaseImageProcessor):
     def __init__(
-            self,
-            data=None,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
-            max_num_hands=2,
-            window_title="hands processor"
+        self,
+        data=None,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+        max_num_hands=2,
+        window_title="hands processor",
     ):
         super().__init__(data)
         self.min_detection_confidence = min_detection_confidence
@@ -154,10 +149,7 @@ class HandsProcessor(BaseImageProcessor):
                 # hand_info[0]: hand_landmarks
                 # hand_info[1]: hand_type
                 for index, hand_info in enumerate(
-                        zip(
-                            results.multi_hand_landmarks,
-                            results.multi_handedness
-                        )
+                    zip(results.multi_hand_landmarks, results.multi_handedness)
                 ):
                     hand = Hand(index, hand_info[0], hand_info[1], self.image)
                     hand.draw_landmarks()
@@ -171,11 +163,12 @@ class HandsProcessor(BaseImageProcessor):
     def __str__(self):
         info = ""
         for hand in self.detected_hands:
-            info = info + \
-                   f"window: {self.window_title}\n" \
-                   f"hand id: {hand.id}, distance: {hand.get_depth()}\n" \
-                   f"hand orientation: {hand.orientation}\n" \
-                   f"thumb orientation: {hand.thumb_orientation}\n" \
-                   f"open set: {hand.get_raised_fingers()}\n" \
-                   "____________________________________________________\n"
+            info = (
+                info + f"window: {self.window_title}\n"
+                f"hand id: {hand.id}, distance: {hand.get_depth()}\n"
+                f"hand orientation: {hand.orientation}\n"
+                f"thumb orientation: {hand.thumb_orientation}\n"
+                f"open set: {hand.get_raised_fingers()}\n"
+                "____________________________________________________\n"
+            )
         return info
