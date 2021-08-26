@@ -1,14 +1,14 @@
 from image_handlers.image_handler import MediaPipeHandsImageHandler
 from image_handlers.stereo_vision_handler import StereoImageHandler
-from image_processors.click_event_processor import ClickEventProcessor
+from image_processors.click_processor import ClickEventProcessor
 from image_processors.depth_processor import DepthProcessor
 from image_processors.hands_centers_processor import HandsCentersProcessor
 from image_processors.hands_processor import HandsProcessor
+from image_processors.stereo_hand_location_processor import \
+    StereoHandLocationProcessor
 
 if __name__ == "__main__":
-    # handler.handle()
-
-    min_detection_confidence = 0.5
+    min_detection_confidence = 0.7
 
     right_handler_processors = [
         HandsProcessor(
@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     stereo_processors = [
         DepthProcessor(),
+        StereoHandLocationProcessor(),
         ClickEventProcessor(),
     ]
 
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     )
 
     stereo_vision = StereoImageHandler(
-        right_handler, left_handler, baseline=11, processors=stereo_processors
+        right_handler, left_handler, baseline=22, processors=stereo_processors
     )
 
     stereo_vision.handle()

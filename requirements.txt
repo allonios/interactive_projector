@@ -2,3 +2,4 @@ event-bus==1.0.2
 mediapipe==0.8.3.1
 numpy==1.21.0
 opencv-python==4.5.2.54
+PyAutoGUI==0.9.53

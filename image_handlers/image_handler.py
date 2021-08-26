@@ -4,8 +4,6 @@ import cv2
 import mediapipe as mp
 
 from image_handlers.base import BaseImageHandlerProcess
-from image_processors.hands_centers_processor import HandsCentersProcessor
-from image_processors.hands_processor import HandsProcessor
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -19,7 +17,9 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
         max_buffer_size=1,
         processors=(),
     ):
-        super().__init__(input_stream, window_title, max_buffer_size, processors)
+        super().__init__(
+            input_stream, window_title, max_buffer_size, processors
+        )
 
         self.prev_frame_time = 0
         self.new_frame_time = 0
@@ -50,9 +50,13 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
         try:
             last_image_count = max(
                 map(
-                    lambda file_name: int(re.search(r"(\d+)", file_name).group()),
+                    lambda file_name: int(
+                        re.search(r"(\d+)", file_name).group()
+                    ),
                     filter(
-                        lambda x: x if re.search(r"saved-image-\d+", x) else None,
+                        lambda x: x
+                        if re.search(r"saved-image-\d+", x)
+                        else None,
                         os.listdir("../saved"),
                     ),
                 )
@@ -68,7 +72,10 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
 
     def handle(self):
         while self.cap.isOpened():
-            self.current_state["success"], self.current_state["image"] = self.cap.read()
+            (
+                self.current_state["success"],
+                self.current_state["image"],
+            ) = self.cap.read()
             self.current_state["data"] = {}
             if not self.current_state["success"]:
                 print("Ignoring empty camera frame.")
@@ -76,27 +83,9 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
 
             # Flip the image horizontally for a later selfie-view display, and convert
             # the BGR image to RGB.
-            self.current_state["image"] = cv2.flip(self.current_state["image"], 1)
-
-            self.current_state["image"] = cv2.resize(
-                self.current_state["image"],
-                None,
-                fx=5,
-                fy=5,
-                interpolation=cv2.INTER_LINEAR,
+            self.current_state["image"] = cv2.flip(
+                self.current_state["image"], 1
             )
-
-            # cropping the image
-            self.current_state["image"] = self.current_state["image"][
-                int(self.current_state["image"].shape[0] / 3) : int(
-                    self.current_state["image"].shape[0] / 3
-                )
-                * 2,
-                int(self.current_state["image"].shape[1] / 3) : int(
-                    self.current_state["image"].shape[1] / 3
-                )
-                * 2,
-            ]
 
             self.implement_processors()
 
@@ -105,51 +94,51 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
             yield self.current_state
 
 
-min_detection_confidence = 0.5
-
-processors = [
-    HandsProcessor(
-        min_detection_confidence=min_detection_confidence,
-        window_title="right",
-    ),
-    HandsCentersProcessor(),
-]
-
-# Testing
-handler1 = MediaPipeHandsImageHandler(
-    input_stream=0,
-    window_title="1",
-    processors=processors,
-)
-handler2 = MediaPipeHandsImageHandler(
-    input_stream=6,
-    window_title="2",
-    processors=processors,
-)
-
-handler1.start()
-while handler1.process.is_alive():
-    data = handler1.read_next_data()
-
-    image_success = data["success"]
-
-    if not image_success:
-        continue
-
-    image = data["image"]
-
-    # image = image[
-    #     int(image.shape[0]/3): int(image.shape[0]/3) * 2,
-    #     int(image.shape[1]/3): int(image.shape[1]/3) * 2,
-    # ]
-
-    centers_of_hands = data["data"].get("hands_centers", None)
-
-    cv2.imshow(handler1.window_title, image)
-    if cv2.waitKey(1) & 0xFF == 27:
-        handler1.stop()
-        # cv2.destroyAllWindows()
-        exit()
+# min_detection_confidence = 0.5
+#
+# processors = [
+#     HandsProcessor(
+#         min_detection_confidence=min_detection_confidence,
+#         window_title="right",
+#     ),
+#     HandsCentersProcessor(),
+# ]
+#
+# # Testing
+# handler1 = MediaPipeHandsImageHandler(
+#     input_stream=0,
+#     window_title="1",
+#     processors=processors,
+# )
+# handler2 = MediaPipeHandsImageHandler(
+#     input_stream=6,
+#     window_title="2",
+#     processors=processors,
+# )
+#
+# handler1.start()
+# while handler1.process.is_alive():
+#     data = handler1.read_next_data()
+#
+#     image_success = data["success"]
+#
+#     if not image_success:
+#         continue
+#
+#     image = data["image"]
+#
+#     # image = image[
+#     #     int(image.shape[0]/3): int(image.shape[0]/3) * 2,
+#     #     int(image.shape[1]/3): int(image.shape[1]/3) * 2,
+#     # ]
+#
+#     centers_of_hands = data["data"].get("hands_centers", None)
+#
+#     cv2.imshow(handler1.window_title, image)
+#     if cv2.waitKey(1) & 0xFF == 27:
+#         handler1.stop()
+#         # cv2.destroyAllWindows()
+#         exit()
 
 # handler1.start()
 # handler2.start()

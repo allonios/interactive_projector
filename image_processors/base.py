@@ -55,8 +55,8 @@ class BaseMultipleImagesProcessor(metaclass=ABCMeta):
         if not isinstance(data, dict):
             self.data = {}
 
-        self.images = self.data.get("images", [])
-        self.data = self.data.get("success", [])
+        self.images = self.data.get("images", {})
+        self.data = self.data.get("success", {})
 
     def __call__(self, data: dict) -> dict:
         self.data = data
