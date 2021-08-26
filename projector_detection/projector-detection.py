@@ -5,10 +5,6 @@ import time
 import argparse
 import time
 
-from screeninfo import get_monitors
-for m in get_monitors():
-    print(str(m))
-
 
 def rescaleFrame(frame, scale=0.50):
     width = int(frame.shape[1] * scale)
