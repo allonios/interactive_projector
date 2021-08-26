@@ -1,25 +1,20 @@
 from math import atan2, degrees, radians
-from typing import List, Tuple
 
 import cv2
 import mediapipe as mp
-from numpy import ndarray
 
 from image_processors.base import BaseImageProcessor
-from utils.utils import (
-    FINGERS_INDEXES,
-    FingerLandmarksPairsFactory,
-    Orientation,
-    calculate_average_distance,
-    get_rotate_landmarks, calculate_collection_average_distance,
-)
+from utils.utils import (FINGERS_INDEXES, FingerLandmarksPairsFactory,
+                         Orientation, calculate_collection_average_distance,
+                         get_rotate_landmarks)
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-class Hand():
-    def __init__(self, hand_landmarks, hand_type, image):
+class Hand:
+    def __init__(self, id, hand_landmarks, hand_type, image):
+        self.id = id
         self.landmarks = hand_landmarks
         self.hand_type = hand_type
         self.image = image
@@ -63,9 +58,7 @@ class Hand():
 
     def get_depth(self):
         return calculate_collection_average_distance(
-            [0, 1, 2, 5, 9, 13, 17],
-            self.landmarks.landmark,
-            self.image.shape
+            [0, 1, 2, 5, 9, 13, 17], self.landmarks.landmark, self.image.shape
         )
         # return calculate_average_distance(self.landmarks.landmark, self.image.shape)
 
@@ -116,46 +109,66 @@ class Hand():
 
 class HandsProcessor(BaseImageProcessor):
     def __init__(
-            self,
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
-            max_num_hands=2
+        self,
+        data=None,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5,
+        max_num_hands=2,
+        window_title="hands processor",
     ):
-        super().__init__()
+        super().__init__(data)
         self.min_detection_confidence = min_detection_confidence
         self.min_tracking_confidence = min_tracking_confidence
         self.max_num_hands = max_num_hands
 
-        self.hands = mp_hands.Hands(
-            max_num_hands=self.max_num_hands,
-            min_detection_confidence=self.min_detection_confidence,
-            min_tracking_confidence=self.min_tracking_confidence,
-        )
+        self.window_title = window_title
 
-    def process_image(self) -> Tuple[ndarray, List[Hand]]:
+        self.detected_hands = []
+
+    def process_data(self) -> dict:
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
 
         # To improve performance, optionally mark the image as not writeable to
         # pass by reference.
         self.image.flags.writeable = False
 
-        print("im process1", self.image.shape)
+        with mp_hands.Hands(
+            max_num_hands=self.max_num_hands,
+            min_detection_confidence=self.min_detection_confidence,
+            min_tracking_confidence=self.min_tracking_confidence,
+        ) as hands_solution:
 
-        results = self.hands.process(self.image)
+            results = hands_solution.process(self.image)
 
-        print("im process2", self.image.shape)
+            # Draw the hand annotations on the image.
+            self.image.flags.writeable = True
+            self.image = cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
 
-        # Draw the hand annotations on the image.
-        self.image.flags.writeable = True
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
+            self.detected_hands = []
+            if results.multi_hand_landmarks:
+                # hand_info[0]: hand_landmarks
+                # hand_info[1]: hand_type
+                for index, hand_info in enumerate(
+                    zip(results.multi_hand_landmarks, results.multi_handedness)
+                ):
+                    hand = Hand(index, hand_info[0], hand_info[1], self.image)
+                    hand.draw_landmarks()
+                    self.detected_hands.append(hand)
 
-        detected_hands = []
-        if results.multi_hand_landmarks:
-            for hand_landmarks, hand_type in zip(
-                results.multi_hand_landmarks, results.multi_handedness
-            ):
-                hand = Hand(hand_landmarks, hand_type, self.image)
-                hand.draw_landmarks()
-                detected_hands.append(hand)
+        self.data["image"] = self.image
+        self.data["data"]["detected_hands"] = self.detected_hands
 
-        return self.image, detected_hands
+        return self.data
+
+    def __str__(self):
+        info = ""
+        for hand in self.detected_hands:
+            info = (
+                info + f"window: {self.window_title}\n"
+                f"hand id: {hand.id}, distance: {hand.get_depth()}\n"
+                f"hand orientation: {hand.orientation}\n"
+                f"thumb orientation: {hand.thumb_orientation}\n"
+                f"open set: {hand.get_raised_fingers()}\n"
+                "____________________________________________________\n"
+            )
+        return info

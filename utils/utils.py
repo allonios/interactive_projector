@@ -1,8 +1,8 @@
-import mediapipe as mp
-
 from copy import deepcopy
 from enum import Enum
 from math import cos, sin, sqrt
+
+import mediapipe as mp
 
 mp_hands = mp.solutions.hands
 
@@ -43,10 +43,7 @@ def calculate_average_distance(landmarks, image_shape: tuple) -> float:
 
 
 def calculate_multiple_distances_to_point(
-        from_point,
-        to_points,
-        landmarks,
-        image_shape
+    from_point, to_points, landmarks, image_shape
 ) -> float:
     sum = 0
     for to_point in to_points:
@@ -96,10 +93,7 @@ class FingerLandmarksPairsFactory:
             thumb_comparator = lambda point1, point2: point1.x < point2.x
 
         fingers_landmarks_pairs = {
-            4: {
-                "threshold": 3,
-                "comparator": thumb_comparator
-            },
+            4: {"threshold": 3, "comparator": thumb_comparator},
             8: {
                 "threshold": 5,
                 "comparator": lambda point1, point2: point1.y > point2.y,
