@@ -72,6 +72,9 @@ class StereoImageHandler(BaseImageHandler):
             right_image = right_data["image"]
             left_image = left_data["image"]
 
+            # zoomed_right = right_data["zoomed_image"]
+            # zoomed_left = left_data["zoomed_image"]
+
             right_centers_of_hands = right_data["data"].get(
                 "hands_centers", None
             )
@@ -90,8 +93,6 @@ class StereoImageHandler(BaseImageHandler):
                 right_data,
                 left_data,
             )
-
-            # right_image, left_image = undistorted_rectify(right_image, left_image)
 
             # data examples:
             """
@@ -157,6 +158,8 @@ class StereoImageHandler(BaseImageHandler):
 
             cv2.imshow(self.left_handler.window_title, left_image)
             cv2.imshow(self.right_handler.window_title, right_image)
+            # cv2.imshow(self.left_handler.window_title + " zoomed", zoomed_left)
+            # cv2.imshow(self.right_handler.window_title + " zoomed", zoomed_right)
 
             if cv2.waitKey(1) & 0xFF == 27:
                 self.left_handler.stop()
