@@ -47,3 +47,5 @@ assets/
 *.mo
 workspace/
 /stereo_vision/
+/papers_code/
+*.onnx

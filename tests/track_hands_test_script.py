@@ -4,7 +4,7 @@ from time import time
 import cv2
 import mediapipe as mp
 
-from utils import calculate_average_distance
+from utils.utils import calculate_average_distance
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -13,7 +13,9 @@ prev_frame_time = 0
 new_frame_time = 0
 
 cap = cv2.VideoCapture(0)
-with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
+with mp_hands.Hands(
+    min_detection_confidence=0.5, min_tracking_confidence=0.5
+) as hands:
     while cap.isOpened():
         success, image = cap.read()
         if not success:
@@ -37,7 +39,9 @@ with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) a
             for hand_landmarks in results.multi_hand_landmarks:
                 print(
                     "avg distance",
-                    calculate_average_distance(hand_landmarks.landmark, image.shape),
+                    calculate_average_distance(
+                        hand_landmarks.landmark, image.shape
+                    ),
                 )
 
                 for index, landmark in enumerate(hand_landmarks.landmark):
