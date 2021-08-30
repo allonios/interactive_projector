@@ -41,22 +41,23 @@ def generate_chess_board(square_length=50):
 
 def show_chess_board(chess_board_img):
     cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
-    # cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     cv2.imshow("window", chess_board_img)
 
 
-def calibrate(source_function):
+def calibrate(source_input):
     chess_board_img, width_corners, height_corners, edge_height, edge_width, width, height, length = generate_chess_board(
-        100)
+        75)
 
     objp = numpy.zeros((int(width_corners) * int(height_corners), 3), numpy.float32)
     objp[:, :2] = numpy.mgrid[0:int(height_corners), 0:int(width_corners)].T.reshape(-1, 2)
     object_points = []  # 3d point in real world space
     image_points = []  # 2d points in image plane.
-
+    cam = cv2.VideoCapture(0)
+    show_chess_board(chess_board_img)
     while True:
-        show_chess_board(chess_board_img)
-        img = source_function()
+        _, img = cam.read()
+        cv2.imshow("t",img)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(gray, (int(height_corners), int(width_corners)), None)
@@ -183,11 +184,15 @@ def mobile_source_function():
 #
 # print(inside, real_coordinates)
 
-calibrated, camera_matrix, _, translation_vector, rotation_vector, square_length, _, _, width_corners, height_corners, edge_width, edge_height, img = calibrate(
-    mobile_source_function)
+# calibrated, camera_matrix, _, translation_vector, rotation_vector, square_length, _, _, width_corners, height_corners, edge_width, edge_height, img = calibrate(
+#     mobile_source_function)
+#
+# getZoomedImage(img, width_corners, height_corners, edge_width, edge_height, square_length, rotation_vector,
+#                translation_vector, camera_matrix, 20, 10, 30, 40)
 
-getZoomedImage(img, width_corners, height_corners, edge_width, edge_height, square_length, rotation_vector,
-               translation_vector, camera_matrix, 20, 10, 30, 40)
+calibrate(0)
+
+cv2.waitKey()
 # cv2.circle(img, point, 3, (0, 255, 255), -1)
 # cv2.circle(chess_img, real_point, 3, (0, 255, 255), -1)
 #
