@@ -18,3 +18,22 @@ class HandsCentersProcessor(BaseImageProcessor):
         # that can't be serialized for buffering with multiprocessing.
         del self.data["data"]["detected_hands"]
         return self.data
+
+
+class PoseBasedHandsCentersProcessor(BaseImageProcessor):
+    def process_data(self) -> dict:
+        self.data["data"]["hands_data"] = list(
+            map(
+                lambda hand: {
+                    hand.id: {
+                        "wrist": hand.wrist,
+                        "elbow": hand.elbow,
+                    }
+                },
+                self.data["data"]["detected_hands"],
+            )
+        )
+        # removing detected hands object because it contains some google mp objects
+        # that can't be serialized for buffering with multiprocessing.
+        del self.data["data"]["detected_hands"]
+        return self.data

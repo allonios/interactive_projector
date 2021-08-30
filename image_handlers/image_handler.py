@@ -3,13 +3,13 @@ from time import time
 import cv2
 import mediapipe as mp
 
-from image_handlers.base import BaseImageHandlerProcess
+from image_handlers.base import SimpleImageHandler
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
 
-class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
+class MediaPipeHandsImageHandler(SimpleImageHandler):
     def __init__(
         self,
         input_stream=0,
@@ -17,9 +17,7 @@ class MediaPipeHandsImageHandler(BaseImageHandlerProcess):
         max_buffer_size=1,
         processors=(),
     ):
-        super().__init__(
-            input_stream, window_title, max_buffer_size, processors
-        )
+        super().__init__(input_stream, window_title, processors)
 
         self.prev_frame_time = 0
         self.new_frame_time = 0

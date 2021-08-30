@@ -20,7 +20,7 @@ def find_depth(
     x_left = left_point[0]
 
     # CALCULATE THE DISPARITY:
-    disparity = (
+    disparity = abs(
         x_left - x_right
     )  # Displacement between left and right frames [pixels]
 

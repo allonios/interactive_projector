@@ -25,6 +25,8 @@ class StereoImageHandler(BaseImageHandler):
         self,
         right_image,
         left_image,
+        right_hand_image,
+        left_hand_image,
         right_image_success,
         left_image_success,
         right_data,
@@ -38,6 +40,8 @@ class StereoImageHandler(BaseImageHandler):
         self.current_state["images"] = {
             "right_image": right_image,
             "left_image": left_image,
+            "right_hand_image": right_hand_image,
+            "left_hand_image": left_hand_image,
         }
 
         self.current_state["success"] = {
@@ -53,12 +57,16 @@ class StereoImageHandler(BaseImageHandler):
         self.current_state["data"]["alpha"] = self.alpha
 
     def handle(self):
-        self.right_handler.start()
-        self.left_handler.start()
+        # self.right_handler.start()
+        # self.left_handler.start()
 
+        # while (
+        #     self.right_handler.process.is_alive()
+        #     and self.left_handler.process.is_alive()
+        # ):
         while (
-            self.right_handler.process.is_alive()
-            and self.left_handler.process.is_alive()
+            self.right_handler.cap.isOpened()
+            and self.left_handler.cap.isOpened()
         ):
             right_data = self.right_handler.read_next_data()
             left_data = self.left_handler.read_next_data()
@@ -82,12 +90,15 @@ class StereoImageHandler(BaseImageHandler):
                 "hands_centers", None
             )
 
-            # print("right data", right_data)
+            right_hand_image = right_data.get("hand_image", 0)
+            left_hand_image = right_data.get("hand_image", 0)
 
             # building current state:
             self.build_new_state(
                 right_image,
                 left_image,
+                right_hand_image,
+                left_hand_image,
                 right_image_success,
                 left_image_success,
                 right_data,
@@ -160,16 +171,50 @@ class StereoImageHandler(BaseImageHandler):
 
     def run(self):
         for data in self.handle():
+            print("======================================================")
+            print("data")
+            print(data["data"])
 
             left_image = data["images"]["left_image"]
             right_image = data["images"]["right_image"]
 
+            # right_hand_image = data["images"]["right_hand_image"]
+            # left_hand_image = data["images"]["left_hand_image"]
+
             cv2.imshow(self.left_handler.window_title, left_image)
             cv2.imshow(self.right_handler.window_title, right_image)
+
+            right_image_hands_data = data["data"]["right_data"]["hands_data"]
+            left_image_hands_data = data["data"]["left_data"]["hands_data"]
+
+            for hand_id, hand_data in enumerate(
+                zip(right_image_hands_data, left_image_hands_data)
+            ):
+                right_hand_data = hand_data[0]
+                left_hand_data = hand_data[1]
+                if not (
+                    right_hand_data.get(hand_id).get("in_projector")
+                    and left_hand_data.get(hand_id).get("in_projector")
+                ):
+                    continue
+
+                print("right hand data", right_hand_data)
+                print("left hand data", left_hand_data)
+
+                right_hand = right_hand_data[hand_id]["hand_image"]
+                left_hand = right_hand_data[hand_id]["hand_image"]
+
+                cv2.imshow(
+                    self.right_handler.window_title + " zoomed", right_hand
+                )
+                cv2.imshow(
+                    self.left_handler.window_title + " zoomed", left_hand
+                )
+
             # cv2.imshow(self.left_handler.window_title + " zoomed", zoomed_left)
             # cv2.imshow(self.right_handler.window_title + " zoomed", zoomed_right)
 
             if cv2.waitKey(1) & 0xFF == 27:
-                self.left_handler.stop()
-                self.right_handler.stop()
+                # self.left_handler.stop()
+                # self.right_handler.stop()
                 exit()

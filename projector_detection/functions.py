@@ -55,11 +55,11 @@ def generate_chess_board(square_length=50):
 
 
 def show_chess_board(chess_board_img):
-    cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN)
+    cv2.namedWindow("chessboard", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(
-        "window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN
+        "chessboard", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN
     )
-    cv2.imshow("window", chess_board_img)
+    cv2.imshow("chessboard", chess_board_img)
 
 
 def calibrate(input_source, reshape_width, reshape_height):
@@ -95,7 +95,7 @@ def calibrate(input_source, reshape_width, reshape_height):
             print("failed to read image")
         # cv2.imshow("t", img)
 
-        # show_chess_board(chess_board_img)
+        show_chess_board(chess_board_img)
         img = cv2.flip(img, 1)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(

@@ -3,9 +3,12 @@ from argparse import ArgumentParser
 from image_handlers.image_handler import MediaPipeHandsImageHandler
 from image_handlers.stereo_vision_handler import StereoImageHandler
 from image_processors.depth_processor import StereoDepthProcessor
-from image_processors.hands_centers_processor import HandsCentersProcessor
-from image_processors.hands_processor import HandsProcessor
-from image_processors.zoom_processor import ZoomProcessor
+from image_processors.hands_centers_processor import \
+    PoseBasedHandsCentersProcessor
+from image_processors.hands_processor import (HandsProcessorV2,
+                                              PoseBasedHandsProcessor)
+from image_processors.in_projector_processor import InProjectorProcessor
+from image_processors.zoom_processor import HandCropperProcessor
 from projector_detection.functions import calibrate_from_chess_baord
 
 
@@ -16,24 +19,44 @@ def stereo_setup():
     left_coord_calculator, left_zoom_util = calibrate_from_chess_baord(
         6, 1280, 720
     )
-    min_detection_confidence = 0.6
+    import cv2
+
+    cv2.destroyWindow("chessboard")
+
+    min_detection_confidence = 0.5
 
     right_handler_processors = [
-        ZoomProcessor(right_zoom_util),
-        HandsProcessor(
+        # ZoomProcessor(right_zoom_util),
+        # HandsProcessor(
+        #     min_detection_confidence=min_detection_confidence,
+        #     window_title="right",
+        # ),
+        PoseBasedHandsProcessor(
             min_detection_confidence=min_detection_confidence,
             window_title="right",
         ),
-        HandsCentersProcessor(),
+        PoseBasedHandsCentersProcessor(),
+        InProjectorProcessor(right_coord_calculator),
+        HandCropperProcessor(),
+        HandsProcessorV2(
+            min_detection_confidence=min_detection_confidence,
+            window_title="right",
+        ),
     ]
 
     left_handler_processors = [
-        ZoomProcessor(left_zoom_util),
-        HandsProcessor(
+        # ZoomProcessor(left_zoom_util),
+        PoseBasedHandsProcessor(
             min_detection_confidence=min_detection_confidence,
             window_title="left",
         ),
-        HandsCentersProcessor(),
+        PoseBasedHandsCentersProcessor(),
+        InProjectorProcessor(left_coord_calculator),
+        HandCropperProcessor(),
+        HandsProcessorV2(
+            min_detection_confidence=min_detection_confidence,
+            window_title="left",
+        ),
     ]
 
     stereo_processors = [
@@ -65,14 +88,18 @@ def mono_setup():
     # coord_calculator, zoom_util = calibrate_from_chess_baord(
     #     2, 1280, 720
     # )
-    min_detection_confidence = 0.6
+    min_detection_confidence = 0.4
     handler_processors = [
         # ZoomProcessor(zoom_util),
-        HandsProcessor(
+        PoseBasedHandsProcessor(
             min_detection_confidence=min_detection_confidence,
-            window_title="right",
+            window_title="window",
         ),
-        HandsCentersProcessor(),
+        # HandsProcessor(
+        #     min_detection_confidence=min_detection_confidence,
+        #     window_title="right",
+        # ),
+        # HandsCentersProcessor(),
     ]
 
     handler = MediaPipeHandsImageHandler(

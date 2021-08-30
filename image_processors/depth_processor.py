@@ -35,22 +35,24 @@ class StereoDepthProcessor(BaseMultipleImagesProcessor):
             left_hand_center = list(left_hand_info.values())[0]
 
             depth = find_depth(
-                right_hand_center,
-                left_hand_center,
+                # right_hand_center,
+                # left_hand_center,
+                right_hand_center["wrist"],
+                left_hand_center["wrist"],
                 right_image,
                 left_image,
                 baseline,
                 alpha,
             )
 
-            # print("depth:", depth)
+            print("depth:", depth)
 
             self.data["data"]["hands_data"][hand_id]["depth"] = depth
 
             cv2.putText(
                 right_image,
                 f"depth: {str(round(depth, 1))}",
-                (0, 30),
+                (0, 200),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.5,
                 (100, 255, 0),
@@ -61,7 +63,7 @@ class StereoDepthProcessor(BaseMultipleImagesProcessor):
             cv2.putText(
                 left_image,
                 f"depth: {str(round(depth, 1))}",
-                (0, 30),
+                (0, 200),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1.5,
                 (100, 255, 0),
@@ -71,7 +73,6 @@ class StereoDepthProcessor(BaseMultipleImagesProcessor):
 
         # print("hands data in depth processor:")
         # print(self.data["data"]["hands_data"])
-
         return self.data
 
 

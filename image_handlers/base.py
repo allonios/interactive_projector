@@ -4,6 +4,53 @@ from queue import Empty
 import cv2
 
 
+class SimpleImageHandler:
+    def __init__(
+        self,
+        input_stream=0,
+        window_title="cam process",
+        processors=(),
+    ):
+        self.input_stream = input_stream
+        self.cap = cv2.VideoCapture(input_stream)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        self.window_title = window_title
+        self.processors = processors
+        self.current_state = None
+
+    def handle(self):
+        while self.cap.isOpened():
+            success, image = self.cap.read()
+
+            if not success:
+                break
+
+            yield image
+
+    def read_next_data(self):
+        for data in self.handle():
+            self.current_state = data
+            return data
+
+    def implement_processors(self):
+        for processor in self.processors:
+            self.current_state = processor(self.current_state)
+            # if str(processor):
+            #     print(processor)
+
+    def run(self):
+        while self.cap.isOpened():
+            data = self.read_next_data()
+            image = data["image"]
+
+            cv2.imshow("Image", image)
+
+            if cv2.waitKey(1) & 0xFF == 27:
+                self.cap.release()
+                exit()
+
+
 class BaseImageHandler:
     def __init__(
         self,
@@ -14,8 +61,8 @@ class BaseImageHandler:
     ):
         self.input_stream = input_stream
         self.cap = cv2.VideoCapture(input_stream)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.window_title = window_title
         self.buffer = Queue(maxsize=max_buffer_size)
         self.processors = processors
