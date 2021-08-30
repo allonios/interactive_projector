@@ -21,7 +21,9 @@ alpha = 56.6  # Camera field of view in the horisontal plane [degrees]
 
 
 # Main program loop with face detector and depth estimation using stereo vision
-with mp_facedetector.FaceDetection(min_detection_confidence=0.7) as face_detection:
+with mp_facedetector.FaceDetection(
+    min_detection_confidence=0.7
+) as face_detection:
 
     while cap_right.isOpened() and cap_left.isOpened():
 
@@ -150,7 +152,6 @@ with mp_facedetector.FaceDetection(min_detection_confidence=0.7) as face_detecti
                     frame_right,
                     frame_left,
                     B,
-                    f,
                     alpha,
                 )
 

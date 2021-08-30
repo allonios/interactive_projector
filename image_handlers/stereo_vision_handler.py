@@ -156,6 +156,14 @@ class StereoImageHandler(BaseImageHandler):
             if right_centers_of_hands and left_centers_of_hands:
                 self.implement_processors()
 
+            yield self.current_state
+
+    def run(self):
+        for data in self.handle():
+
+            left_image = data["images"]["left_image"]
+            right_image = data["images"]["right_image"]
+
             cv2.imshow(self.left_handler.window_title, left_image)
             cv2.imshow(self.right_handler.window_title, right_image)
             # cv2.imshow(self.left_handler.window_title + " zoomed", zoomed_left)
@@ -164,5 +172,4 @@ class StereoImageHandler(BaseImageHandler):
             if cv2.waitKey(1) & 0xFF == 27:
                 self.left_handler.stop()
                 self.right_handler.stop()
-                # cv2.destroyAllWindows()
                 exit()

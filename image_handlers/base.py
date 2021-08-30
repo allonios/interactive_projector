@@ -23,6 +23,7 @@ class BaseImageHandler:
 
     def handle(self):
         while self.cap.isOpened():
+            print("called")
             success, image = self.cap.read()
 
             if not success:
@@ -71,3 +72,15 @@ class BaseImageHandlerProcess(BaseImageHandler):
     def stop(self):
         self.cap.release()
         self.process.terminate()
+
+    def run(self):
+        self.start()
+        while self.process.is_alive():
+            data = self.read_next_data()
+            image = data["image"]
+
+            cv2.imshow("Image", image)
+
+            if cv2.waitKey(1) & 0xFF == 27:
+                self.stop()
+                exit()

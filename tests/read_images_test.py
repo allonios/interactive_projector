@@ -13,16 +13,5 @@ while cap.isOpened():
 
     cv2.imshow("Image", image)
 
-    # zooming:
-    # # -1 resize
-    # image = cv2.resize(image, None, fx=5, fy=5, interpolation=cv2.INTER_LINEAR)
-    #
-    # # -2 cropping the image
-    # zoomed = image[
-    #     int(image.shape[0] / 5) : int(image.shape[0] / 5) * 2,
-    #     int(image.shape[1] / 5) : int(image.shape[1] / 5) * 2,
-    # ]
-    # cv2.imshow("Zoomed", zoomed)
-
     if cv2.waitKey(1) & 0xFF == 27:
         exit()
