@@ -1,5 +1,7 @@
 from math import sqrt
 
+import cv2
+
 from image_processors.base import BaseImageProcessor
 
 
@@ -15,6 +17,13 @@ class ZoomProcessor(BaseImageProcessor):
 
 
 class HandCropperProcessor(BaseImageProcessor):
+    def rescale_frame(self, frame, scale=0.50):
+        width = int(frame.shape[1] * scale)
+        height = int(frame.shape[0] * scale)
+        dimensions = (width, height)
+
+        return cv2.resize(frame, dimensions, interpolation=cv2.INTER_AREA)
+
     def process_data(self) -> dict:
         image = self.image
         hands_data = self.data["data"]["hands_data"]
@@ -24,14 +33,15 @@ class HandCropperProcessor(BaseImageProcessor):
                 continue
 
             wrist = hand_data[hand_id]["wrist"]
-            elbow = hand_data[hand_id]["wrist"]
+            elbow = hand_data[hand_id]["elbow"]
 
             distance = sqrt(
                 (wrist[0] - elbow[0]) ** 2 + (wrist[1] - elbow[1]) ** 2
             )
 
-            distance = max(distance, 100)
-            # distance = 100
+            distance = distance / 2
+
+            distance = max(distance, 50)
 
             min_x = max(0, wrist[0] - distance)
             max_x = min(image.shape[1], wrist[0] + distance)
@@ -43,12 +53,17 @@ class HandCropperProcessor(BaseImageProcessor):
                 int(min_y) : int(max_y), int(min_x) : int(max_x), :
             ]
 
+            scale = 500 / cropped_img.shape[1]
+
+            cropped_img = self.rescale_frame(cropped_img, scale)
+
             hand_data[hand_id]["hand_image"] = cropped_img
             hand_data[hand_id]["reshape_data"] = {
                 "min_x": min_x,
                 "max_x": max_x,
                 "min_y": min_y,
                 "max_y": max_y,
+                "scale": scale,
             }
 
         return self.data

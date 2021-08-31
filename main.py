@@ -2,9 +2,10 @@ from argparse import ArgumentParser
 
 from image_handlers.image_handler import MediaPipeHandsImageHandler
 from image_handlers.stereo_vision_handler import StereoImageHandler
+from image_processors.click_processor import ClickEventProcessorV2
 from image_processors.depth_processor import StereoDepthProcessor
-from image_processors.hands_centers_processor import \
-    PoseBasedHandsCentersProcessor
+from image_processors.hands_centers_processor import (
+    HandsCentersProcessorV2, PoseBasedHandsCentersProcessor)
 from image_processors.hands_processor import (HandsProcessorV2,
                                               PoseBasedHandsProcessor)
 from image_processors.in_projector_processor import InProjectorProcessor
@@ -23,7 +24,8 @@ def stereo_setup():
 
     cv2.destroyWindow("chessboard")
 
-    min_detection_confidence = 0.5
+    pose_min_detection_confidence = 0.4
+    hand_min_detection_confidence = 0.4
 
     right_handler_processors = [
         # ZoomProcessor(right_zoom_util),
@@ -32,37 +34,38 @@ def stereo_setup():
         #     window_title="right",
         # ),
         PoseBasedHandsProcessor(
-            min_detection_confidence=min_detection_confidence,
+            min_detection_confidence=pose_min_detection_confidence,
             window_title="right",
         ),
         PoseBasedHandsCentersProcessor(),
         InProjectorProcessor(right_coord_calculator),
         HandCropperProcessor(),
         HandsProcessorV2(
-            min_detection_confidence=min_detection_confidence,
+            min_detection_confidence=hand_min_detection_confidence,
             window_title="right",
         ),
+        HandsCentersProcessorV2(),
     ]
 
     left_handler_processors = [
         # ZoomProcessor(left_zoom_util),
         PoseBasedHandsProcessor(
-            min_detection_confidence=min_detection_confidence,
+            min_detection_confidence=pose_min_detection_confidence,
             window_title="left",
         ),
         PoseBasedHandsCentersProcessor(),
         InProjectorProcessor(left_coord_calculator),
         HandCropperProcessor(),
         HandsProcessorV2(
-            min_detection_confidence=min_detection_confidence,
+            min_detection_confidence=hand_min_detection_confidence,
             window_title="left",
         ),
+        HandsCentersProcessorV2(),
     ]
 
     stereo_processors = [
-        StereoDepthProcessor(),
-        # StereoHandLocationProcessor(),
-        # ClickEventProcessor(coord_calculator),
+        StereoDepthProcessor(right_coord_calculator, left_coord_calculator),
+        ClickEventProcessorV2(),
     ]
 
     right_handler = MediaPipeHandsImageHandler(

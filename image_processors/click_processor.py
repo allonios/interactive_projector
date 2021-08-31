@@ -4,7 +4,7 @@ from numpy import zeros
 from events.events_manager import bus
 from image_processors.base import BaseMultipleImagesProcessor
 
-THRESHOLD = 45
+THRESHOLD = 400
 
 
 class ClickEventProcessor(BaseMultipleImagesProcessor):
@@ -41,5 +41,57 @@ class ClickEventProcessor(BaseMultipleImagesProcessor):
                     cv2.destroyWindow("Location")
             else:
                 cv2.destroyWindow("Location")
+
+        return self.data
+
+
+class ClickEventProcessorV2(BaseMultipleImagesProcessor):
+    def __init__(self):
+        super().__init__()
+        self.buffer = []
+
+    def process_data(self) -> dict:
+        right_image_hands_data = self.data["data"]["right_data"]["hands_data"]
+        left_image_hands_data = self.data["data"]["left_data"]["hands_data"]
+
+        merged_data = self.data["data"]["merged_data"]
+
+        if not (right_image_hands_data and left_image_hands_data):
+            return self.data
+
+        for hand_id, hand_data in enumerate(
+            zip(right_image_hands_data, left_image_hands_data)
+        ):
+            right_image_hand_data = hand_data[0].get(hand_id)
+            left_image_hand_data = hand_data[1].get(hand_id)
+
+            if (
+                right_image_hand_data["in_projector"]
+                and left_image_hand_data["in_projector"]
+                and merged_data
+            ):
+                hand_depth = merged_data[hand_id]["depth"]
+                # if hand_depth >= THRESHOLD:
+                if True:
+                    # self.buffer.append(hand_depth)
+                    hand_coords = merged_data[hand_id]["hand_coord"]
+                    bus.emit(
+                        "clicked",
+                        {
+                            "hand_id": hand_id,
+                            "hand_depth": hand_depth,
+                            "hand_coords": hand_coords,
+                        },
+                    )
+                # else:
+                #     self.buffer.clear()
+                #
+                # if len(self.buffer) > 1:
+                #     hand_coords = merged_data[hand_id]["hand_coord"]
+                #     bus.emit("clicked", {
+                #         "hand_id": hand_id,
+                #         "hand_depth": hand_depth,
+                #         "hand_coords": hand_coords,
+                #     })
 
         return self.data

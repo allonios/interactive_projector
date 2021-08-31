@@ -1,78 +1,139 @@
-import cv2
-
 from image_processors.base import (BaseImageProcessor,
                                    BaseMultipleImagesProcessor)
 from utils.stereo_vision.triangulation import find_depth
 
 
 class StereoDepthProcessor(BaseMultipleImagesProcessor):
+    def __init__(self, callback_right, callback_left):
+        super().__init__()
+        self.callback_right = callback_right
+        self.callback_left = callback_left
+
+    def original_coord_calculator(self, point, padding_x, padding_y, scale):
+        result = (
+            int(padding_x + (point[0] / scale)),
+            int(padding_y + (point[1] / scale)),
+        )
+        # print(point, padding_x, padding_y, scale, result)
+        return result
+
     def build_hand_state(self, hand_id):
         self.data["data"]["hands_data"][hand_id] = {}
         self.data["data"]["hands_data"][hand_id]["depth"] = 0
 
     def process_data(self):
+        right_image_hands_data = self.data["data"]["right_data"]["hands_data"]
+        left_image_hands_data = self.data["data"]["left_data"]["hands_data"]
+
+        self.data["data"]["merged_data"] = {}
+
+        if not (right_image_hands_data and left_image_hands_data):
+            return self.data
+
         right_image = self.images["right_image"]
         left_image = self.images["left_image"]
 
         baseline = self.data["data"]["baseline"]
         alpha = self.data["data"]["alpha"]
 
-        right_centers_of_hands = self.data["data"]["right_data"][
-            "hands_centers"
-        ]
-        left_centers_of_hands = self.data["data"]["left_data"]["hands_centers"]
-
-        self.data["data"]["hands_data"] = {}
-
-        for right_hand_info, left_hand_info in zip(
-            right_centers_of_hands, left_centers_of_hands
+        for hand_id, hand_data in enumerate(
+            zip(right_image_hands_data, left_image_hands_data)
         ):
-            hand_id = list(right_hand_info.keys())[0]
+            right_image_hand_data = hand_data[0].get(hand_id)
+            left_image_hand_data = hand_data[1].get(hand_id)
 
-            self.build_hand_state(hand_id)
+            right_cropped_image_hand_coord = right_image_hand_data.get(
+                "detected_hand_coords"
+            )
+            left_cropped_image_hand_coord = left_image_hand_data.get(
+                "detected_hand_coords"
+            )
 
-            right_hand_center = list(right_hand_info.values())[0]
-            left_hand_center = list(left_hand_info.values())[0]
+            if not (
+                right_cropped_image_hand_coord
+                and left_cropped_image_hand_coord
+            ):
+                continue
+
+            right_image_hand_coord = self.original_coord_calculator(
+                right_cropped_image_hand_coord,
+                right_image_hand_data["reshape_data"]["min_x"],
+                right_image_hand_data["reshape_data"]["min_y"],
+                right_image_hand_data["reshape_data"]["scale"],
+            )
+
+            left_image_hand_coord = self.original_coord_calculator(
+                left_cropped_image_hand_coord,
+                left_image_hand_data["reshape_data"]["min_x"],
+                left_image_hand_data["reshape_data"]["min_y"],
+                left_image_hand_data["reshape_data"]["scale"],
+            )
+
+            # cv2.line(
+            #     right_image,
+            #     (
+            #         int(right_image_hand_data["reshape_data"]["min_x"]),
+            #         50,
+            #     ),
+            #     (
+            #         int(right_image_hand_data["reshape_data"]["min_x"]),
+            #         right_image.shape[0],
+            #     ),
+            #     (0, 0, 255),
+            #     3
+            # )
+            #
+            # cv2.line(
+            #     right_image,
+            #     (
+            #         50,
+            #         int(right_image_hand_data["reshape_data"]["min_y"]),
+            #     ),
+            #     (
+            #         right_image.shape[1],
+            #         int(right_image_hand_data["reshape_data"]["min_y"]),
+            #     ),
+            #     (0, 0, 255),
+            #     3
+            # )
+            #
+            # cv2.circle(
+            #     right_image,
+            #     (
+            #         int(right_image_hand_coord[0]),
+            #         int(right_image_hand_coord[1]),
+            #     ),
+            #     5,
+            #     (255, 255, 0),
+            #     -1
+            # )
 
             depth = find_depth(
-                # right_hand_center,
-                # left_hand_center,
-                right_hand_center["wrist"],
-                left_hand_center["wrist"],
+                right_image_hand_coord,
+                left_image_hand_coord,
                 right_image,
                 left_image,
                 baseline,
                 alpha,
             )
 
-            print("depth:", depth)
+            print("depth", hand_id, depth)
 
-            self.data["data"]["hands_data"][hand_id]["depth"] = depth
-
-            cv2.putText(
-                right_image,
-                f"depth: {str(round(depth, 1))}",
-                (0, 200),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1.5,
-                (100, 255, 0),
-                3,
-                cv2.LINE_AA,
+            _, right_image_hand_coord = self.callback_right(
+                right_image_hand_coord
+            )
+            _, left_image_hand_coord = self.callback_left(
+                left_image_hand_coord
             )
 
-            cv2.putText(
-                left_image,
-                f"depth: {str(round(depth, 1))}",
-                (0, 200),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1.5,
-                (100, 255, 0),
-                3,
-                cv2.LINE_AA,
-            )
+            self.data["data"]["merged_data"][hand_id] = {
+                "depth": depth,
+                "hand_coord": (
+                    (right_image_hand_coord[0] + left_image_hand_coord[0]) / 2,
+                    right_image_hand_coord[1],
+                ),
+            }
 
-        # print("hands data in depth processor:")
-        # print(self.data["data"]["hands_data"])
         return self.data
 
 

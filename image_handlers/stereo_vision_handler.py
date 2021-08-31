@@ -83,13 +83,6 @@ class StereoImageHandler(BaseImageHandler):
             # zoomed_right = right_data["zoomed_image"]
             # zoomed_left = left_data["zoomed_image"]
 
-            right_centers_of_hands = right_data["data"].get(
-                "hands_centers", None
-            )
-            left_centers_of_hands = left_data["data"].get(
-                "hands_centers", None
-            )
-
             right_hand_image = right_data.get("hand_image", 0)
             left_hand_image = right_data.get("hand_image", 0)
 
@@ -106,75 +99,14 @@ class StereoImageHandler(BaseImageHandler):
             )
 
             # data examples:
-            """
-            current_state: {
-                "images": = {
-                    "right_image": right_image,
-                    "left_image": left_image,
-                },
-                "success": {
-                    "right_image_success": right_image_success,
-                    "left_image_success": left_image_success,
-                },
-                "data": {
-                    "baseline": baseline,
-                    "focal": focal,
-                    "alpha": alpha,
-                    "right_data": {
-                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ]
-                    },
-                    "left_data": {
-                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ]
-                    },
-                }
-            }
-            """
+            """"""
 
-            """
-            new_state: {
-                "images": = {
-                    "right_image": right_image,
-                    "left_image": left_image,
-                },
-                "success": {
-                    "right_image_success": right_image_success,
-                    "left_image_success": left_image_success,
-                },
-                "data": {
-                    "baseline": baseline,
-                    "focal": focal,
-                    "alpha": alpha,
-                    "right_data": {
-                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ],
-                    },
-                    "left_data": {
-                        "hands_centers": [0: (x1, y1), 1: (x2, y2), ],
-                    },
-                    "hands_data": {
-                        0: {
-                            depth: 10,
-                            # more data
-                        },
-                        1: {
-                            depth: 10,
-                            # more data
-                        }
-                    }
-                }
-            }
-            """
-
-            if right_centers_of_hands and left_centers_of_hands:
-                self.implement_processors()
+            self.implement_processors()
 
             yield self.current_state
 
     def run(self):
         for data in self.handle():
-            print("======================================================")
-            print("data")
-            print(data["data"])
-
             left_image = data["images"]["left_image"]
             right_image = data["images"]["right_image"]
 
@@ -197,9 +129,6 @@ class StereoImageHandler(BaseImageHandler):
                     and left_hand_data.get(hand_id).get("in_projector")
                 ):
                     continue
-
-                print("right hand data", right_hand_data)
-                print("left hand data", left_hand_data)
 
                 right_hand = right_hand_data[hand_id]["hand_image"]
                 left_hand = right_hand_data[hand_id]["hand_image"]

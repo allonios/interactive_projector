@@ -86,16 +86,19 @@ def calibrate(input_source, reshape_width, reshape_height):
     cap = cv2.VideoCapture(input_source)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, reshape_width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, reshape_height)
-
+    skip_counter = 0
     if not cap.isOpened():
         print("Failed to open cap")
     while cap.isOpened():
+        show_chess_board(chess_board_img)
+        if skip_counter < 100:
+            skip_counter += 1
+            continue
         success, img = cap.read()
         if not success:
             print("failed to read image")
         # cv2.imshow("t", img)
 
-        show_chess_board(chess_board_img)
         img = cv2.flip(img, 1)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(
@@ -181,9 +184,19 @@ def check_if_inside_the_screen(
     rotation_matrix,
     translation_vector,
     square_length,
+    padding_x=0,
+    padding_y=0,
+    scale=1,
 ):
+    original_point = (
+        int(padding_x + (pixel[0] / scale)),
+        int(padding_y + (pixel[1] / scale)),
+    )
+
+    # original_point = (original_point[0], screen_width - original_point[1])
+
     real_coordinates = get_real_coordinates(
-        pixel,
+        original_point,
         camera_matrix,
         rotation_matrix,
         translation_vector,
@@ -192,11 +205,11 @@ def check_if_inside_the_screen(
     if (
         real_coordinates[0] < 0
         or real_coordinates[1] < 0
-        or real_coordinates[0] > screen_height
+        or real_coordinates[1] > screen_height
         or real_coordinates[0] > screen_width
     ):
         return False, real_coordinates
-    return True, real_coordinates
+    return True, (real_coordinates[0], screen_height - real_coordinates[1])
 
 
 def calibrate_from_chess_baord(input_source, reshape_width, reshape_height):
@@ -255,7 +268,7 @@ def utils_generator(
     edge_width,
     edge_height,
 ):
-    return lambda point: check_if_inside_the_screen(
+    return lambda point, padding_x=0, padding_y=0, scale=1: check_if_inside_the_screen(
         width,
         height,
         point,
@@ -263,6 +276,9 @@ def utils_generator(
         rotation_matrix,
         translation_vector,
         square_length,
+        padding_x,
+        padding_y,
+        scale,
     ), lambda img, margin_right=0, margin_left=0, margin_top=0, margin_bottom=0: get_zoomed_image(
         img,
         width_corners,

@@ -245,7 +245,7 @@ class HandsProcessorV2(BaseImageProcessor):
                 self.image.flags.writeable = True
                 self.image = cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
 
-                self.detected_hands = []
+                self.detected_hands = None
                 if results.multi_hand_landmarks:
                     # hand_info[0]: hand_landmarks
                     # hand_info[1]: hand_type
@@ -258,11 +258,29 @@ class HandsProcessorV2(BaseImageProcessor):
                         hand = Hand(
                             index, hand_info[0], hand_info[1], self.image
                         )
-                        hand.draw_landmarks()
-                        self.detected_hands.append(hand)
+                        # hand.draw_landmarks()
+
+                        cv2.circle(
+                            self.image,
+                            (
+                                int(
+                                    hand.landmarks.landmark[0].x
+                                    * self.image.shape[1]
+                                ),
+                                int(
+                                    hand.landmarks.landmark[0].y
+                                    * self.image.shape[0]
+                                ),
+                            ),
+                            5,
+                            (255, 0, 255),
+                            -1,
+                        )
+
+                        self.detected_hands = hand
 
             hand_data[hand_id]["hand_image"] = self.image
-            hand_data[hand_id]["detected_hands"] = self.detected_hands
+            hand_data[hand_id]["detected_hand"] = self.detected_hands
 
         return self.data
 
@@ -297,7 +315,8 @@ class PoseBasedHandsProcessor(BaseImageProcessor):
         self.detected_hands = []
 
         self.pose = mp_pose.Pose(
-            min_detection_confidence=0.4, min_tracking_confidence=0.3
+            min_detection_confidence=min_detection_confidence,
+            min_tracking_confidence=min_tracking_confidence,
         )
 
     # def __call__(self, data: dict, pose=None) -> dict:
@@ -367,22 +386,22 @@ class PoseBasedHandsProcessor(BaseImageProcessor):
                 )
                 self.detected_hands.append(hand)
 
-            cv2.circle(
-                self.image,
-                (
-                    int(
-                        results.pose_landmarks.landmark[15].x
-                        * self.image.shape[1]
-                    ),
-                    int(
-                        results.pose_landmarks.landmark[15].y
-                        * self.image.shape[0]
-                    ),
-                ),
-                5,
-                (255, 0, 0),
-                -1,
-            )
+            # cv2.circle(
+            #     self.image,
+            #     (
+            #         int(
+            #             results.pose_landmarks.landmark[15].x
+            #             * self.image.shape[1]
+            #         ),
+            #         int(
+            #             results.pose_landmarks.landmark[15].y
+            #             * self.image.shape[0]
+            #         ),
+            #     ),
+            #     5,
+            #     (255, 0, 0),
+            #     -1,
+            # )
             cv2.circle(
                 self.image,
                 (
