@@ -1,28 +1,33 @@
-import enum
 import math
-import time
-
-import numpy
 import random
+import time
+import urllib.request
+
 import cv2
 import mediapipe as mp
-import urllib.request
+import numpy
+
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 import json
 
 URL = "http://192.168.46.114:8080/shot.jpg"
 
-class Gestures():
-    def __init__(self, size_of_buffer = 10, config_file_url = "gestures.json", minimum_magnitude= 15):
+
+class Gestures:
+    def __init__(
+        self,
+        size_of_buffer=10,
+        config_file_url="gestures/gestures.json",
+        minimum_magnitude=10,
+    ):
         self.size_of_buffer = size_of_buffer
-        self.old_pos = numpy.array([0,0])
-        self.state = state = "None"
+        self.old_pos = numpy.array([0, 0])
+        self.state = "None"
         self.directions_buffer = []
         self.config_file_url = config_file_url
         self.load_config_file()
         self.minimum_magnitude = minimum_magnitude
-
 
     def buffer_equality(self, buffer, gesture, from_index, to_index):
         for i in range(from_index, to_index):
@@ -50,8 +55,8 @@ class Gestures():
         results_error = math.inf
 
         while start_index != buffer_length:
-            start_index += 1
-            print("state, error => ", state, error)
+            # print("state, error => ", state, error)
+            # print("buffer, gesture => ", self.directions_buffer, gesture)
             if state and error < results_error:
                 result_state = True
                 results_error = error
@@ -59,7 +64,7 @@ class Gestures():
             buffer_index = start_index
             gesture_index = 0
             while True:
-                if(gesture_index == gesture_length):
+                if gesture_index == gesture_length:
                     state = True
                     break
 
@@ -68,32 +73,53 @@ class Gestures():
                     break
 
                 # normal case
-                if gesture[gesture_index] == self.directions_buffer[buffer_index]:
+                if (
+                    gesture[gesture_index]
+                    == self.directions_buffer[buffer_index]
+                ):
                     buffer_index += 1
                     gesture_index += 1
                     continue
 
                 # extra case
-                elif buffer_length > buffer_index + 1 and gesture[gesture_index] == self.directions_buffer[buffer_index + 1]:
+                elif (
+                    buffer_length > buffer_index + 1
+                    and gesture[gesture_index]
+                    == self.directions_buffer[buffer_index + 1]
+                ):
                     gesture_index += 1
                     error += 1
                     continue
 
                 # changed case
-                elif gesture_length > gesture_index + 1 and buffer_length > buffer_index + 1 and gesture[gesture_index + 1] == self.directions_buffer[buffer_index + 1]:
+                elif (
+                    gesture_length > gesture_index + 1
+                    and buffer_length > buffer_index + 1
+                    and gesture[gesture_index + 1]
+                    == self.directions_buffer[buffer_index + 1]
+                ):
                     gesture_index += 1
                     buffer_index += 1
                     error += 1
                     continue
 
                 # missed case
-                elif gesture_length > gesture_index + 1 and gesture[gesture_index + 1] == self.directions_buffer[buffer_index]:
+                elif (
+                    gesture_length > gesture_index + 1
+                    and gesture[gesture_index + 1]
+                    == self.directions_buffer[buffer_index]
+                ):
                     gesture_index += 1
                     error += 1
                     continue
 
                 # 0 1 0  case
-                elif gesture_length > 0 and buffer_length > buffer_index + 1 and gesture[gesture_index - 1] == self.directions_buffer[buffer_index + 1]:
+                elif (
+                    gesture_length > 0
+                    and buffer_length > buffer_index + 1
+                    and gesture[gesture_index - 1]
+                    == self.directions_buffer[buffer_index + 1]
+                ):
                     buffer_index += 2
                     error += 1
                     continue
@@ -101,23 +127,29 @@ class Gestures():
                 # wrong case
                 else:
                     break
+            start_index += 1
         return result_state, results_error / gesture_length
 
     def add_to_buffer(self, direction):
         if direction == -1:
             return
 
-        if (len(self.directions_buffer) > 0 and self.directions_buffer[-1] == direction):
+        if (
+            len(self.directions_buffer) > 0
+            and self.directions_buffer[-1] == direction
+        ):
             return
 
-        if (len(self.directions_buffer) < self.size_of_buffer):
+        if len(self.directions_buffer) < self.size_of_buffer:
             self.directions_buffer.append(direction)
         else:
             self.directions_buffer.pop(0)
             self.directions_buffer.append(direction)
 
     def get_direction(self, point):
-        vector = numpy.array([point[0] - self.old_pos[0], point[1] - self.old_pos[1]])
+        vector = numpy.array(
+            [point[0] - self.old_pos[0], point[1] - self.old_pos[1]]
+        )
         mag = numpy.sqrt(vector.dot(vector))
         if mag > self.minimum_magnitude:
             angle = -numpy.angle(complex(vector[0], vector[1]), deg=True)
@@ -132,27 +164,33 @@ class Gestures():
         for gesture in self.gestures:
             state, error = self.search_in_buffer(gesture["directions"])
             if state and error < 0.3:
-                print("gesture", gesture["directions"],"buffer", self.directions_buffer,"error", error)
+                print(
+                    "gesture",
+                    gesture["directions"],
+                    "buffer",
+                    self.directions_buffer,
+                    "error",
+                    error,
+                )
 
                 self.directions_buffer = []
                 eval(gesture["callback"])
                 return gesture["state"]
 
-
     def update(self, point):
-            direction, _ = self.get_direction(point)
-            if direction == -1:
-                return direction, self.state
-            self.add_to_buffer(direction)
-            self.state = self.check_gestures()
+        direction, _ = self.get_direction(point)
+        if direction == -1:
             return direction, self.state
+        self.add_to_buffer(direction)
+        self.state = self.check_gestures()
+        # print("direction => ", direction)
+        return direction, self.state
 
-    def add_gesture(self, gesture, add_to_config = True):
+    def add_gesture(self, gesture, add_to_config=True):
         self.gestures.append(gesture)
         if add_to_config:
             f = open(self.config_file_url, "w")
             f.write(json.dumps(self.gestures))
-
 
     def load_config_file(self):
         f = open(self.config_file_url, "r")
@@ -179,57 +217,83 @@ def get_direction_text(direction):
     if direction == -135:
         return "BOTTOM_LEFT"
 
+
 def apply_gestures(gestures):
     LANDMARK = 15
 
     state = "None"
-    # cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(2)
     with mp_pose.Pose(
-        min_detection_confidence=0.4,
-        min_tracking_confidence=0.3) as pose:
-      while True:
-        # success, image = cap.read()
-        img_arr = numpy.array(
-            bytearray(urllib.request.urlopen(URL).read()), dtype=numpy.uint8)
-        image = cv2.imdecode(img_arr, -1)
-        # if success:
-        image_height, image_width, _ = image.shape
+        min_detection_confidence=0.4, min_tracking_confidence=0.3
+    ) as pose:
+        while True:
+            success, image = cap.read()
+            # img_arr = numpy.array(
+            #     bytearray(urllib.request.urlopen(URL).read()), dtype=numpy.uint8)
+            # image = cv2.imdecode(img_arr, -1)
+            if success:
+                image_height, image_width, _ = image.shape
 
-        # Flip the image horizontally for a later selfie-view display, and convert
-        # the BGR image to RGB.
-        image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
-        # To improve performance, optionally mark the image as not writeable to
-        # pass by reference.
-        image.flags.writeable = False
-        results = pose.process(image)
-        # Draw the pose annotation on the image.
-        image.flags.writeable = True
+                # Flip the image horizontally for a later selfie-view display, and convert
+                # the BGR image to RGB.
+                image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
+                # To improve performance, optionally mark the image as not writeable to
+                # pass by reference.
+                image.flags.writeable = False
+                results = pose.process(image)
+                # Draw the pose annotation on the image.
+                image.flags.writeable = True
 
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        # mp_drawing.draw_landmarks(
-        #     image,
-        #     results.pose_landmarks,
-        #     mp_pose.POSE_CONNECTIONS,
-        #     # landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
-        # )
+                # mp_drawing.draw_landmarks(
+                #     image,
+                #     results.pose_landmarks,
+                #     mp_pose.POSE_CONNECTIONS,
+                #     # landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style()
+                # )
 
-        if results.pose_landmarks:
-            x = results.pose_landmarks.landmark[LANDMARK].x * image_width
-            y = results.pose_landmarks.landmark[LANDMARK].y * image_height
-            visibility = results.pose_landmarks.landmark[LANDMARK].visibility
-            if visibility > 0.5:
-                direction, tstate = gestures.update((x, y))
-                if tstate != None:
-                    state = tstate
-                cv2.circle(image,(int(x),int(y)), 3, (255, 0, 0), -1)
-                cv2.putText(image, get_direction_text(direction), (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
+                if results.pose_landmarks:
+                    x = (
+                        results.pose_landmarks.landmark[LANDMARK].x
+                        * image_width
+                    )
+                    y = (
+                        results.pose_landmarks.landmark[LANDMARK].y
+                        * image_height
+                    )
+                    visibility = results.pose_landmarks.landmark[
+                        LANDMARK
+                    ].visibility
+                    if visibility > 0.5:
+                        direction, tstate = gestures.update((x, y))
+                        if tstate != None:
+                            state = tstate
+                        cv2.circle(image, (int(x), int(y)), 3, (255, 0, 0), -1)
+                        cv2.putText(
+                            image,
+                            get_direction_text(direction),
+                            (50, 100),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            1,
+                            (255, 0, 0),
+                            2,
+                        )
 
-            cv2.putText(image, str(state), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
-            cv2.imshow('MediaPipe Pose', image)
-            if cv2.waitKey(5) & 0xFF == 27:
-              break
-      # cap.release()
+                    cv2.putText(
+                        image,
+                        str(state),
+                        (50, 50),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (255, 0, 0),
+                        2,
+                    )
+                    cv2.imshow("MediaPipe Pose", image)
+                    if cv2.waitKey(5) & 0xFF == 27:
+                        break
+        cap.release()
+
 
 def normalize(buffer, mag_buffer):
     if len(buffer) == 0:
@@ -256,8 +320,8 @@ def add_gesture(gestures):
     cap = cv2.VideoCapture(2)
 
     with mp_pose.Pose(
-            min_detection_confidence=0.4,
-            min_tracking_confidence=0.3) as pose:
+        min_detection_confidence=0.4, min_tracking_confidence=0.3
+    ) as pose:
         while True:
             success, image = cap.read()
             image_height, image_width, _ = image.shape
@@ -283,9 +347,11 @@ def add_gesture(gestures):
             if results.pose_landmarks:
                 x = results.pose_landmarks.landmark[LANDMARK].x * image_width
                 y = results.pose_landmarks.landmark[LANDMARK].y * image_height
-                visibility = results.pose_landmarks.landmark[LANDMARK].visibility
+                visibility = results.pose_landmarks.landmark[
+                    LANDMARK
+                ].visibility
                 if visibility > 0.5:
-                    point = (x,y)
+                    point = (x, y)
                     direction, mag = gestures.get_direction(point)
                     print(direction)
 
@@ -310,12 +376,35 @@ def add_gesture(gestures):
                 else:
                     start_time = time.time()
 
-                cv2.putText(image, "Record" if record else "Waiting", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                (255, 0, 0), 2)
-                cv2.putText(image, str(time.time() - start_time), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-                cv2.putText(image, str(normalize(buffer, mag_buffer)), (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                cv2.putText(
+                    image,
+                    "Record" if record else "Waiting",
+                    (50, 100),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (255, 0, 0),
+                    2,
+                )
+                cv2.putText(
+                    image,
+                    str(time.time() - start_time),
+                    (50, 50),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (255, 0, 0),
+                    2,
+                )
+                cv2.putText(
+                    image,
+                    str(normalize(buffer, mag_buffer)),
+                    (50, 150),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (255, 0, 0),
+                    2,
+                )
                 cv2.circle(image, (int(x), int(y)), 3, (255, 0, 0), -1)
-                cv2.imshow('MediaPipe Pose', image)
+                cv2.imshow("MediaPipe Pose", image)
                 if cv2.waitKey(5) & 0xFF == 27:
                     break
 
@@ -323,17 +412,18 @@ def add_gesture(gestures):
     gesture = {
         "state": f"GESTURES{random.random()}",
         "directions": buffer,
-        "callback": "print('custom')"
+        "callback": "print('custom')",
     }
     print(gesture)
     print(buffer)
     gestures.add_gesture(gesture)
 
+
 gestures = Gestures(minimum_magnitude=60)
 
 # add_gesture(gestures)
-gestures.load_config_file()
-apply_gestures(gestures)
+# gestures.load_config_file()
+# apply_gestures(gestures)
 
 # index = 1
 # arr = []

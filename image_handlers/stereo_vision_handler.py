@@ -116,8 +116,15 @@ class StereoImageHandler(BaseImageHandler):
             cv2.imshow(self.left_handler.window_title, left_image)
             cv2.imshow(self.right_handler.window_title, right_image)
 
-            right_image_hands_data = data["data"]["right_data"]["hands_data"]
-            left_image_hands_data = data["data"]["left_data"]["hands_data"]
+            # right_image_hands_data = data["data"]["right_data"]["hands_data"]
+            # left_image_hands_data = data["data"]["left_data"]["hands_data"]
+
+            right_image_hands_data = data["data"]["right_data"].get(
+                "hands_data", []
+            )
+            left_image_hands_data = data["data"]["left_data"].get(
+                "hands_data", []
+            )
 
             for hand_id, hand_data in enumerate(
                 zip(right_image_hands_data, left_image_hands_data)
