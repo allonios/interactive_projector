@@ -1,4 +1,5 @@
 import enum
+import math
 import time
 
 import numpy
@@ -29,15 +30,78 @@ class Gestures():
                 return False
         return True
 
+    # def search_in_buffer(self, gesture):
+    #     buffer_length = len(self.directions_buffer)
+    #     gesture_length = len(gesture)
+    #     for i, _ in enumerate(self.directions_buffer):
+    #         if (i + gesture_length >= buffer_length):
+    #             break
+    #         if self.buffer_equality(self.directions_buffer, gesture, i, i + gesture_length):
+    #             return True
+    #     return False
+
     def search_in_buffer(self, gesture):
         buffer_length = len(self.directions_buffer)
         gesture_length = len(gesture)
-        for i, _ in enumerate(self.directions_buffer):
-            if (i + gesture_length >= buffer_length):
-                break
-            if self.buffer_equality(self.directions_buffer, gesture, i, i + gesture_length):
-                return True
-        return False
+        start_index = 0
+        error = 0
+        state = False
+        result_state = False
+        results_error = math.inf
+
+        while start_index != buffer_length:
+            start_index += 1
+            print("state, error => ", state, error)
+            if state and error < results_error:
+                result_state = True
+                results_error = error
+
+            buffer_index = start_index
+            gesture_index = 0
+            while True:
+                if(gesture_index == gesture_length):
+                    state = True
+                    break
+
+                if buffer_index >= buffer_length:
+                    state = False
+                    break
+
+                # normal case
+                if gesture[gesture_index] == self.directions_buffer[buffer_index]:
+                    buffer_index += 1
+                    gesture_index += 1
+                    continue
+
+                # extra case
+                elif buffer_length > buffer_index + 1 and gesture[gesture_index] == self.directions_buffer[buffer_index + 1]:
+                    gesture_index += 1
+                    error += 1
+                    continue
+
+                # changed case
+                elif gesture_length > gesture_index + 1 and buffer_length > buffer_index + 1 and gesture[gesture_index + 1] == self.directions_buffer[buffer_index + 1]:
+                    gesture_index += 1
+                    buffer_index += 1
+                    error += 1
+                    continue
+
+                # missed case
+                elif gesture_length > gesture_index + 1 and gesture[gesture_index + 1] == self.directions_buffer[buffer_index]:
+                    gesture_index += 1
+                    error += 1
+                    continue
+
+                # 0 1 0  case
+                elif gesture_length > 0 and buffer_length > buffer_index + 1 and gesture[gesture_index - 1] == self.directions_buffer[buffer_index + 1]:
+                    buffer_index += 2
+                    error += 1
+                    continue
+
+                # wrong case
+                else:
+                    break
+        return result_state, results_error / gesture_length
 
     def add_to_buffer(self, direction):
         if direction == -1:
@@ -66,7 +130,10 @@ class Gestures():
 
     def check_gestures(self):
         for gesture in self.gestures:
-            if self.search_in_buffer(gesture["directions"]):
+            state, error = self.search_in_buffer(gesture["directions"])
+            if state and error < 0.3:
+                print("gesture", gesture["directions"],"buffer", self.directions_buffer,"error", error)
+
                 self.directions_buffer = []
                 eval(gesture["callback"])
                 return gesture["state"]
@@ -116,7 +183,7 @@ def apply_gestures(gestures):
     LANDMARK = 15
 
     state = "None"
-
+    # cap = cv2.VideoCapture(2)
     with mp_pose.Pose(
         min_detection_confidence=0.4,
         min_tracking_confidence=0.3) as pose:
@@ -125,6 +192,7 @@ def apply_gestures(gestures):
         img_arr = numpy.array(
             bytearray(urllib.request.urlopen(URL).read()), dtype=numpy.uint8)
         image = cv2.imdecode(img_arr, -1)
+        # if success:
         image_height, image_width, _ = image.shape
 
         # Flip the image horizontally for a later selfie-view display, and convert
@@ -161,6 +229,7 @@ def apply_gestures(gestures):
             cv2.imshow('MediaPipe Pose', image)
             if cv2.waitKey(5) & 0xFF == 27:
               break
+      # cap.release()
 
 def normalize(buffer, mag_buffer):
     if len(buffer) == 0:
@@ -184,14 +253,13 @@ def add_gesture(gestures):
     mag_buffer = []
     record = False
     start_time = time.time()
+    cap = cv2.VideoCapture(2)
+
     with mp_pose.Pose(
             min_detection_confidence=0.4,
             min_tracking_confidence=0.3) as pose:
         while True:
-            # success, image = cap.read()
-            img_arr = numpy.array(
-                bytearray(urllib.request.urlopen(URL).read()), dtype=numpy.uint8)
-            image = cv2.imdecode(img_arr, -1)
+            success, image = cap.read()
             image_height, image_width, _ = image.shape
 
             # Flip the image horizontally for a later selfie-view display, and convert
@@ -261,8 +329,20 @@ def add_gesture(gestures):
     print(buffer)
     gestures.add_gesture(gesture)
 
-gestures = Gestures(minimum_magnitude=40)
+gestures = Gestures(minimum_magnitude=60)
 
-add_gesture(gestures)
+# add_gesture(gestures)
 gestures.load_config_file()
 apply_gestures(gestures)
+
+# index = 1
+# arr = []
+# while True:
+#     cap = cv2.VideoCapture(index)
+#     if index > 100:
+#         break
+#     if cap.read()[0]:
+#         arr.append(index)
+#     cap.release()
+#     index += 1
+# print(arr)
